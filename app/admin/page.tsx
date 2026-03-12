@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
+import { signInWithCustomToken } from "firebase/auth";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { collection, onSnapshot, query, orderBy, addDoc, serverTimestamp, deleteDoc, doc } from "firebase/firestore";
 import { 
   Box, 
@@ -78,6 +80,9 @@ export default function AdminDashboard() {
   const [projects, setProjects] = useState<any[]>([]);
   const [experience, setExperience] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState(0);
+
+  const { getToken } = useAuth();
+  const { user } = useUser();
 
   useEffect(() => {
     const unsubR = onSnapshot(query(collection(db, "contactRequests"), orderBy("createdAt", "desc")), (snap) => setRequests(snap.docs.map(d => ({id: d.id, ...d.data()}))));

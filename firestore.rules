@@ -2,30 +2,19 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Admin check: Matches the hardcoded list in environment variables
-    function isAdmin() {
-      return request.auth != null && (
-        request.auth.token.email == 'bercho001@gmail.com' || 
-        request.auth.token.email == 'fernandosoria1379@gmail.com'
-      );
-    }
-
-    // 1. Projects and Experience: Publicly readable, admin writable
+    // 1. Projects and Experience: TEMPORARILY OPEN FOR SEEDING
     match /projects/{project} {
-      allow read: if true;
-      allow write: if isAdmin(); 
+      allow read, write: if true; 
     }
     
     match /experience/{exp} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read, write: if true;
     }
 
-    // 2. Contact Requests: Anyone can submit (Create), Admins can Read
+    // 2. Contact Requests: Anyone can submit (Create) and read (for the simple dashboard)
     match /contactRequests/{requestId} {
-      allow create: if true;
-      allow read: if true; // Supporting simple dash for now
-      allow update, delete: if isAdmin();
+      allow create, read: if true;
+      allow update, delete: if true; 
     }
   }
 }
