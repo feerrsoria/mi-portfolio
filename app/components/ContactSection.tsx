@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useLanguage } from "@/context/LanguageContext";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore";
 import { 
   Box, 
   Typography, 
@@ -34,6 +34,7 @@ export default function ContactSection() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [requestType, setRequestType] = useState('budget');
+  const [takenSlots, setTakenSlots] = useState<string[]>([]);
   const [formData, setFormData] = useState({ 
     name: "", 
     email: "", 
@@ -41,8 +42,27 @@ export default function ContactSection() {
     projectType: "",
     estBudget: "",
     deadline: "",
-    goals: ""
+    goals: "",
+    appointmentDate: "",
+    appointmentTime: ""
   });
+
+  useEffect(() => {
+    if (requestType === 'appointment' && formData.appointmentDate) {
+      const fetchSlots = async () => {
+        const q = query(
+          collection(db, "contactRequests"), 
+          where("type", "==", "appointment"),
+          where("appointmentDate", "==", formData.appointmentDate)
+        );
+        const snap = await getDocs(q);
+        setTakenSlots(snap.docs.map(d => d.data().appointmentTime));
+      };
+      fetchSlots();
+    } else {
+      setTakenSlots([]);
+    }
+  }, [requestType, formData.appointmentDate]);
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -74,8 +94,13 @@ export default function ContactSection() {
         projectType: "", 
         estBudget: "", 
         deadline: "", 
-        goals: "" 
+        goals: "",
+        appointmentDate: "",
+        appointmentTime: ""
       });
+      if (requestType === 'appointment') {
+        setTakenSlots(prev => [...prev, formData.appointmentTime]);
+      }
       setTimeout(() => setSuccess(false), 5000);
     } catch (err) {
       console.error("Error saving request:", err);
@@ -166,6 +191,7 @@ export default function ContactSection() {
                   <RadioGroup row value={requestType} onChange={(e) => setRequestType(e.target.value)}>
                     <FormControlLabel value="budget" control={<Radio color="primary" />} label={<Typography sx={{ fontWeight: 700, fontSize: '0.8rem' }}>{t.contact.budget}</Typography>} />
                     <FormControlLabel value="proposal" control={<Radio color="primary" />} label={<Typography sx={{ fontWeight: 700, fontSize: '0.8rem' }}>{t.contact.proposal}</Typography>} />
+                    <FormControlLabel value="appointment" control={<Radio color="primary" />} label={<Typography sx={{ fontWeight: 700, fontSize: '0.8rem' }}>APPOINTMENT</Typography>} />
                   </RadioGroup>
                 </FormControl>
 
@@ -196,7 +222,7 @@ export default function ContactSection() {
                     </Grid>
                   </Grid>
 
-                  {requestType === 'budget' ? (
+                  {requestType === 'budget' && (
                     <Grid container spacing={6}>
                       <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField 
@@ -221,7 +247,8 @@ export default function ContactSection() {
                         />
                       </Grid>
                     </Grid>
-                  ) : (
+                  )}
+                  {requestType === 'proposal' && (
                     <Grid container spacing={6}>
                       <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField 
@@ -246,6 +273,59 @@ export default function ContactSection() {
                         />
                       </Grid>
                     </Grid>
+                  )}
+                  {requestType === 'appointment' && (
+                    <Box>
+                      <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.1em', mb: 2, display: 'block' }}>SELECT DATE & TIME</Typography>
+                      <Grid container spacing={4}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <TextField 
+                            fullWidth 
+                            type="date"
+                            variant="outlined" 
+                            required
+                            value={formData.appointmentDate}
+                            onChange={(e) => setFormData({...formData, appointmentDate: e.target.value, appointmentTime: ''})}
+                            inputProps={{ min: new Date().toISOString().split('T')[0] }}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12 }}>
+                          {formData.appointmentDate ? (
+                            <Stack direction="row" flexWrap="wrap" gap={2}>
+                              {['09:00', '10:00', '11:00', '12:00', '13:00', '14:00'].map(slot => {
+                                const isTaken = takenSlots.includes(slot);
+                                return (
+                                  <Button
+                                    key={slot}
+                                    variant={formData.appointmentTime === slot ? "contained" : "outlined"}
+                                    onClick={() => setFormData({...formData, appointmentTime: slot})}
+                                    disabled={isTaken}
+                                    sx={{ 
+                                      borderRadius: 0, 
+                                      fontWeight: 800,
+                                      opacity: isTaken ? 0.3 : 1,
+                                      filter: isTaken ? 'blur(1px)' : 'none',
+                                      borderColor: isTaken ? 'transparent' : 'black',
+                                      color: formData.appointmentTime === slot ? 'white' : 'black',
+                                      bgcolor: formData.appointmentTime === slot ? 'black' : 'transparent',
+                                      '&:hover': {
+                                        bgcolor: isTaken ? 'transparent' : 'black',
+                                        color: isTaken ? 'black' : 'white'
+                                      }
+                                    }}
+                                  >
+                                    {slot}
+                                  </Button>
+                                )
+                              })}
+                            </Stack>
+                          ) : (
+                            <Typography variant="body2" sx={{ color: 'rgba(0,0,0,0.5)', fontStyle: 'italic' }}>Please select a date first</Typography>
+                          )}
+                        </Grid>
+                      </Grid>
+                    </Box>
                   )}
 
                   <TextField 

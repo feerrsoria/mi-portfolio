@@ -62,9 +62,13 @@ export default function ProjectsSection() {
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}>
-                  <Typography variant="h3" sx={{ fontWeight: 800, color: 'rgba(0,0,0,0.1)', textTransform: 'uppercase' }}>
-                    {project.title}
-                  </Typography>
+                  {project.imageUrl ? (
+                    <Box component="img" src={project.imageUrl} alt={project.title} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <Typography variant="h3" sx={{ fontWeight: 800, color: 'rgba(0,0,0,0.1)', textTransform: 'uppercase' }}>
+                      {project.title}
+                    </Typography>
+                  )}
                 </Box>
 
                 <Box sx={{ flex: 1 }}>

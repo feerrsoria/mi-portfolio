@@ -1,9 +1,9 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { db, auth } from "@/lib/firebase";
 import { signInWithCustomToken } from "firebase/auth";
 import { useAuth, useUser } from "@clerk/nextjs";
-import { collection, onSnapshot, query, orderBy, addDoc, serverTimestamp, deleteDoc, doc } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, addDoc, serverTimestamp, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { 
   Box, 
   Typography, 
@@ -15,11 +15,17 @@ import {
   Button, 
   Chip,
   Link as MuiLink,
-  IconButton
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField
 } from "@mui/material";
-import { Mail, Clock, ExternalLink, Calendar, Trash2, Plus, Database } from "lucide-react";
+import { Mail, Clock, ExternalLink, Calendar, Trash2, Plus, Database, Edit, Upload } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
-const AdminCard = ({ title, subtitle, date, user, status, content, actionIcon: Icon, onDelete }: any) => (
+const AdminCard = ({ title, subtitle, date, user, status, content, actionIcon: Icon, onDelete, onEdit }: any) => (
   <Paper elevation={0} sx={{ 
     p: 4, 
     bgcolor: 'rgba(255,255,255,0.03)', 
@@ -51,6 +57,11 @@ const AdminCard = ({ title, subtitle, date, user, status, content, actionIcon: I
               }} 
             />
           )}
+          {onEdit && (
+            <IconButton onClick={onEdit} size="small" sx={{ color: 'rgba(255,255,255,0.2)', '&:hover': { color: '#00ccff' } }}>
+              <Edit size={16} />
+            </IconButton>
+          )}
           <IconButton onClick={onDelete} size="small" sx={{ color: 'rgba(255,255,255,0.2)', '&:hover': { color: 'red' } }}>
             <Trash2 size={16} />
           </IconButton>
@@ -80,6 +91,11 @@ export default function AdminDashboard() {
   const [projects, setProjects] = useState<any[]>([]);
   const [experience, setExperience] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState(0);
+  const [editingProject, setEditingProject] = useState<any>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean, title: string, message: string, onConfirm: () => void } | null>(null);
+  const [alertDialog, setAlertDialog] = useState<{ open: boolean, title: string, message: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { getToken } = useAuth();
   const { user } = useUser();
@@ -93,15 +109,67 @@ export default function AdminDashboard() {
   }, []);
 
   const handleDelete = async (col: string, id: string) => {
-    if (confirm("Are you sure?")) {
-      await deleteDoc(doc(db, col, id));
+    setConfirmDialog({
+      open: true,
+      title: 'Confirm Deletion',
+      message: 'Are you sure you want to delete this item? This action cannot be undone.',
+      onConfirm: async () => {
+        await deleteDoc(doc(db, col, id));
+        setConfirmDialog(null);
+      }
+    });
+  };
+
+  const saveProject = async () => {
+    if (editingProject && editingProject.id) {
+      const { id, ...data } = editingProject;
+      await updateDoc(doc(db, "projects", id), data);
+      setEditingProject(null);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `project-images/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('projects')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('projects')
+        .getPublicUrl(filePath);
+
+      setEditingProject((prev: any) => ({ ...prev, imageUrl: data.publicUrl }));
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      setAlertDialog({
+        open: true,
+        title: 'Upload Failed',
+        message: 'Failed to upload image. Please ensure your Supabase configuration is correct and the bucket "projects" exists and is public.\n\nDetails: ' + (error?.message || 'Unknown error')
+      });
+    } finally {
+      setUploadingImage(false);
     }
   };
 
   const seedData = async () => {
-    if (!confirm("This will add default data. Continue?")) return;
+    setConfirmDialog({
+      open: true,
+      title: 'Seed Default Data',
+      message: 'This will add default data to your database. Continue?',
+      onConfirm: async () => {
+        setConfirmDialog(null);
 
-    // Seed Projects
+        // Seed Projects
     const defaultProjects = [
       {
         title: "XDesigner",
@@ -159,7 +227,13 @@ export default function AdminDashboard() {
         await addDoc(collection(db, "experience"), e);
     }
 
-    alert("Seeding complete!");
+        setAlertDialog({
+          open: true,
+          title: 'Success',
+          message: 'Seeding complete!'
+        });
+      }
+    });
   };
 
   return (
@@ -204,6 +278,7 @@ export default function AdminDashboard() {
                    subtitle={p.subtitle_en}
                    content={p.description_en}
                    onDelete={() => handleDelete("projects", p.id)}
+                   onEdit={() => setEditingProject(p)}
                  />
                </Grid>
             ))}
@@ -243,6 +318,150 @@ export default function AdminDashboard() {
            </Stack>
         </Grid>
       </Grid>
+
+      <Dialog open={!!editingProject} onClose={() => setEditingProject(null)} maxWidth="md" fullWidth PaperProps={{ sx: { bgcolor: '#111', color: 'white', borderRadius: 0, border: '1px solid rgba(255,255,255,0.1)' } }}>
+        <DialogTitle sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>EDIT PROJECT</DialogTitle>
+        <DialogContent dividers sx={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+          {editingProject && (
+            <Stack spacing={4} sx={{ pt: 2 }}>
+              <TextField 
+                label="Title" 
+                fullWidth 
+                variant="outlined" 
+                value={editingProject.title || ''} 
+                onChange={e => setEditingProject({...editingProject, title: e.target.value})}
+                InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
+                sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
+              />
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField 
+                    label="Subtitle (EN)" 
+                    fullWidth 
+                    value={editingProject.subtitle_en || ''} 
+                    onChange={e => setEditingProject({...editingProject, subtitle_en: e.target.value})}
+                    InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
+                    sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField 
+                    label="Subtitle (ES)" 
+                    fullWidth 
+                    value={editingProject.subtitle_es || ''} 
+                    onChange={e => setEditingProject({...editingProject, subtitle_es: e.target.value})}
+                    InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
+                    sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
+                  />
+                </Grid>
+              </Grid>
+              <TextField 
+                label="Description (EN)" 
+                fullWidth 
+                multiline rows={3}
+                value={editingProject.description_en || ''} 
+                onChange={e => setEditingProject({...editingProject, description_en: e.target.value})}
+                InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
+                sx={{ textarea: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
+              />
+              <TextField 
+                label="Description (ES)" 
+                fullWidth 
+                multiline rows={3}
+                value={editingProject.description_es || ''} 
+                onChange={e => setEditingProject({...editingProject, description_es: e.target.value})}
+                InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
+                sx={{ textarea: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
+              />
+              <Box>
+                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', mb: 1, display: 'block' }}>Project Image</Typography>
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    ref={fileInputRef}
+                    onChange={handleImageUpload}
+                  />
+                  <Button 
+                    variant="outlined" 
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingImage}
+                    startIcon={uploadingImage ? null : <Upload size={16} />}
+                    sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.2)', borderRadius: 0 }}
+                  >
+                    {uploadingImage ? 'UPLOADING...' : 'UPLOAD IMAGE'}
+                  </Button>
+                  {editingProject.imageUrl && (
+                    <Box component="img" src={editingProject.imageUrl} sx={{ height: 40, width: 40, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.2)' }} />
+                  )}
+                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {editingProject.imageUrl || 'No image selected'}
+                  </Typography>
+                </Stack>
+              </Box>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <TextField 
+                    label="Live URL" 
+                    fullWidth 
+                    value={editingProject.live || ''} 
+                    onChange={e => setEditingProject({...editingProject, live: e.target.value})}
+                    InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
+                    sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <TextField 
+                    label="GitHub URL" 
+                    fullWidth 
+                    value={editingProject.github || ''} 
+                    onChange={e => setEditingProject({...editingProject, github: e.target.value})}
+                    InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
+                    sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <TextField 
+                    label="Order" 
+                    type="number"
+                    fullWidth 
+                    value={editingProject.order || 0} 
+                    onChange={e => setEditingProject({...editingProject, order: Number(e.target.value)})}
+                    InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
+                    sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
+                  />
+                </Grid>
+              </Grid>
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setEditingProject(null)} sx={{ color: 'rgba(255,255,255,0.6)' }}>CANCEL</Button>
+          <Button onClick={saveProject} variant="contained" sx={{ bgcolor: 'white', color: 'black', '&:hover': { bgcolor: 'rgba(255,255,255,0.8)' }, fontWeight: 800 }}>SAVE CHANGES</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={!!alertDialog?.open} onClose={() => setAlertDialog(null)} PaperProps={{ sx: { bgcolor: '#111', color: 'white', borderRadius: 0, border: '1px solid rgba(255,255,255,0.1)' } }}>
+        <DialogTitle sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>{alertDialog?.title}</DialogTitle>
+        <DialogContent dividers sx={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+          <Typography>{alertDialog?.message}</Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setAlertDialog(null)} variant="contained" sx={{ bgcolor: 'white', color: 'black', '&:hover': { bgcolor: 'rgba(255,255,255,0.8)' }, fontWeight: 800 }}>OK</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={!!confirmDialog?.open} onClose={() => setConfirmDialog(null)} PaperProps={{ sx: { bgcolor: '#111', color: 'white', borderRadius: 0, border: '1px solid rgba(255,255,255,0.1)' } }}>
+        <DialogTitle sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>{confirmDialog?.title}</DialogTitle>
+        <DialogContent dividers sx={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+          <Typography>{confirmDialog?.message}</Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setConfirmDialog(null)} sx={{ color: 'rgba(255,255,255,0.6)' }}>CANCEL</Button>
+          <Button onClick={confirmDialog?.onConfirm} variant="contained" sx={{ bgcolor: 'white', color: 'black', '&:hover': { bgcolor: 'rgba(255,255,255,0.8)' }, fontWeight: 800 }}>CONFIRM</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

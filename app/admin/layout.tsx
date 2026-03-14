@@ -18,22 +18,22 @@ export default async function AdminLayout({
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'black', color: 'white', py: 8 }}>
-      <Container maxWidth="xl">
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 12, borderBottom: '1px solid rgba(255,255,255,0.1)', pb: 6 }}>
-          <Box>
-             <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.3em', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>RESTRICTED ACCESS</Typography>
-             <Typography variant="h3" sx={{ fontWeight: 800, letterSpacing: '-0.05em', mt: 1 }}>ADMIN COMMAND CENTER</Typography>
-          </Box>
-          <Stack direction="row" spacing={3} alignItems="center">
-             <Typography variant="body2" sx={{ fontWeight: 600, opacity: 0.6 }}>{email}</Typography>
-             <Avatar sx={{ bgcolor: 'white', color: 'black', fontWeight: 800 }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'black', color: 'white', padding: '4rem 1rem' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+             <span style={{ fontWeight: 800, letterSpacing: '0.3em', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', fontSize: '0.75rem', display: 'block' }}>RESTRICTED ACCESS</span>
+             <h1 style={{ fontWeight: 800, letterSpacing: '-0.05em', marginTop: '0.5rem', fontSize: '2rem' }}>ADMIN COMMAND CENTER</h1>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+             <span style={{ fontWeight: 600, opacity: 0.6, fontSize: '0.875rem' }}>{email}</span>
+             <div style={{ backgroundColor: 'white', color: 'black', fontWeight: 800, borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {user?.firstName?.[0] || "A"}
-             </Avatar>
-          </Stack>
-        </Stack>
+             </div>
+          </div>
+        </div>
         {children}
-      </Container>
-    </Box>
+      </div>
+    </div>
   );
 }
