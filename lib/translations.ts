@@ -8,7 +8,9 @@ export const translations = {
       contact: "CONTACT",
       admin: "ADMIN PANEL",
       dashboard: "DASHBOARD",
-      login: "LOGIN"
+      login: "LOGIN",
+      logout: "SIGN OUT",
+      account: "ACCOUNT"
     },
     hero: {
       title: "FULL-STACK<br />DEVELOPER",
@@ -87,7 +89,9 @@ export const translations = {
       contact: "CONTACTO",
       admin: "PANEL ADMIN",
       dashboard: "PANEL",
-      login: "INICIAR SESIÓN"
+      login: "INICIAR SESIÓN",
+      logout: "CERRAR SESIÓN",
+      account: "MI CUENTA"
     },
     hero: {
       title: "DESARROLLADOR<br />FULL-STACK",

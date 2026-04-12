@@ -2,19 +2,35 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 1. Projects and Experience: TEMPORARILY OPEN FOR SEEDING
+    function isAdmin() {
+      return request.auth != null && (request.auth.token.email == "bercho001@gmail.com" || request.auth.token.email == "fernandosoria1379@gmail.com");
+    }
+
     match /projects/{project} {
-      allow read, write: if true; 
+      allow read: if true; 
+      allow write: if isAdmin();
     }
     
     match /experience/{exp} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
-    // 2. Contact Requests: Anyone can submit (Create) and read (for the simple dashboard)
     match /contactRequests/{requestId} {
-      allow create, read: if true;
-      allow update, delete: if true; 
+      allow create: if true;
+      allow read, update, delete: if isAdmin(); 
+    }
+
+    match /budgets/{budgetId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null && (request.auth.uid == resource.data.userId || isAdmin());
+      allow update, delete: if isAdmin();
+    }
+
+    match /appointments/{apptmntId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null && (request.auth.uid == resource.data.userId || isAdmin());
+      allow update, delete: if isAdmin();
     }
   }
 }

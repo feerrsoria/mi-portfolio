@@ -2,7 +2,9 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { UserButton, useUser } from "@clerk/nextjs";
+import { UserButton } from "@/app/components/UserButton";
+import { useAuth } from "@/context/AuthContext";
+import ProtectedRoute from "@/app/components/ProtectedRoute";
 import { 
   Box, 
   Drawer, 
@@ -31,7 +33,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user } = useUser();
+  const { user, isAdmin } = useAuth();
   const pathname = usePathname();
   const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
@@ -40,13 +42,9 @@ export default function DashboardLayout({
     setMounted(true);
   }, []);
 
-  const adminEmailsStr = process.env.NEXT_PUBLIC_ADMIN_EMAILS || "bercho001@gmail.com,fernandosoria1379@gmail.com";
-  const ADMIN_EMAILS = adminEmailsStr.split(",").map(e => e.trim());
-  const isActuallyAdmin = user?.primaryEmailAddress?.emailAddress && ADMIN_EMAILS.includes(user.primaryEmailAddress.emailAddress);
-
   const menuItems = [
     { text: t.nav.dashboard, icon: LayoutDashboard, href: "/dashboard" },
-    ...(!isActuallyAdmin ? [
+    ...(!isAdmin ? [
       { text: "My Budgets", icon: FileText, href: "/dashboard/budget" },
       { text: "My Projects", icon: Code, href: "/dashboard/development" },
     ] : []),
@@ -56,7 +54,8 @@ export default function DashboardLayout({
   if (!mounted) return null;
 
   return (
-    <Box sx={{ display: 'flex', bgcolor: 'white', minHeight: '100vh' }}>
+    <ProtectedRoute>
+      <Box sx={{ display: 'flex', bgcolor: 'white', minHeight: '100vh' }}>
       <Drawer
         variant="permanent"
         sx={{
@@ -79,7 +78,7 @@ export default function DashboardLayout({
             </Typography>
           </Link>
           <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.2em', color: 'rgba(0,0,0,0.4)', mt: 1, display: 'block' }}>
-            {isActuallyAdmin ? "ADMIN PANEL" : "CLIENT PORTAL"}
+            {isAdmin ? "ADMIN PANEL" : "CLIENT PORTAL"}
           </Typography>
         </Box>
 
@@ -123,7 +122,7 @@ export default function DashboardLayout({
         <Box sx={{ p: 4, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
           <Stack direction="row" spacing={2} alignItems="center">
             <UserButton>
-                {isActuallyAdmin && (
+                {isAdmin && (
                     <UserButton.MenuItems>
                         <UserButton.Link
                             label={t.nav.admin}
@@ -134,9 +133,9 @@ export default function DashboardLayout({
                 )}
             </UserButton>
             <Box sx={{ overflow: 'hidden' }}>
-              <Typography variant="body2" noWrap sx={{ fontWeight: 700 }}>{user?.fullName}</Typography>
+              <Typography variant="body2" noWrap sx={{ fontWeight: 700 }}>{user?.displayName || 'User'}</Typography>
               <Typography variant="caption" noWrap sx={{ color: 'rgba(0,0,0,0.4)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                {user?.primaryEmailAddress?.emailAddress}
+                {user?.email}
               </Typography>
             </Box>
           </Stack>
@@ -147,5 +146,6 @@ export default function DashboardLayout({
         {children}
       </Box>
     </Box>
+    </ProtectedRoute>
   );
 }

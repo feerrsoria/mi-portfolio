@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
-import { Box, Typography, Container, Grid } from "@mui/material";
+import { Box, Typography, Container, Grid2 as Grid } from "@mui/material";
 import { useLanguage } from "@/context/LanguageContext";
 
 const stack = [
@@ -14,8 +14,8 @@ const stack = [
 export default function TechStack() {
   const { t } = useLanguage();
   return (
-    <Box component="section" sx={{ py: 12, bgcolor: 'black', color: 'white' }}>
-      <Container maxWidth="xl">
+    <Box component="section" sx={{ py: 12, bgcolor: 'black', color: 'white', pl: { xs: 0, lg: '100px' } }}>
+      <Container maxWidth="xl" disableGutters sx={{ ml: 0 }}>
         <motion.div
            initial={{ opacity: 0 }}
            whileInView={{ opacity: 1 }}
@@ -25,7 +25,7 @@ export default function TechStack() {
           <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.2em', opacity: 0.4, textTransform: 'uppercase' }}>
             {t.tech.subtitle}
           </Typography>
-          <Typography variant="h2" sx={{ fontWeight: 800, letterSpacing: '-0.05em', mt: 2, fontSize: { xs: '3rem', md: '5rem' } }}>
+          <Typography variant="h2" sx={{ mt: 2, fontSize: { xs: '3rem', md: 'clamp(3rem, 6vw, 6rem)' } }}>
             {t.tech.title}
           </Typography>
         </motion.div>
@@ -46,7 +46,8 @@ export default function TechStack() {
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
                     {cat.items.map((item) => (
                       <Typography key={item} variant="h4" sx={{ 
-                        fontWeight: 800, 
+                        fontWeight: 600, 
+                        fontSize: '1.25rem',
                         letterSpacing: '-0.02em',
                         transition: 'all 0.2s',
                         cursor: 'crosshair',

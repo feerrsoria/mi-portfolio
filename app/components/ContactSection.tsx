@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore";
@@ -8,7 +8,7 @@ import {
   Box, 
   Typography, 
   Container, 
-  Grid, 
+  Grid2 as Grid, 
   Stack, 
   Link as MuiLink, 
   TextField, 
@@ -28,7 +28,8 @@ import {
 import { Mail, Phone, Github, Linkedin, MapPin, Send, CheckCircle2 } from "lucide-react";
 
 export default function ContactSection() {
-  const { isSignedIn, user } = useUser();
+  const { user } = useAuth();
+  const isSignedIn = !!user;
   const { t } = useLanguage();
   const [openDialog, setOpenDialog] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -80,8 +81,8 @@ export default function ContactSection() {
     try {
       await addDoc(collection(db, "contactRequests"), {
         ...formData,
-        userId: user.id,
-        userEmail: user.primaryEmailAddress?.emailAddress,
+        userId: user?.uid,
+        userEmail: user?.email,
         type: requestType,
         status: 'pending',
         createdAt: serverTimestamp()
@@ -112,8 +113,8 @@ export default function ContactSection() {
   if (!mounted) return null;
 
   return (
-    <Box component="section" id="contact" sx={{ py: 20, bgcolor: 'white', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-      <Container maxWidth="xl">
+    <Box component="section" id="contact" sx={{ py: 20, bgcolor: 'white', borderTop: '1px solid rgba(0,0,0,0.05)', pl: { xs: 0, lg: '100px' } }}>
+      <Container maxWidth="xl" disableGutters sx={{ ml: 0 }}>
         <Grid container spacing={12}>
           <Grid size={{ xs: 12, lg: 5 }}>
             <Box sx={{ position: { lg: 'sticky' }, top: 120 }}>
@@ -123,12 +124,9 @@ export default function ContactSection() {
               <Typography 
                 variant="h1" 
                 sx={{ 
-                  fontWeight: 800, 
-                  letterSpacing: '-0.05em', 
                   mt: 2, 
                   mb: 4, 
-                  fontSize: { xs: '3.5rem', md: '6rem' }, 
-                  lineHeight: 1 
+                  fontSize: { xs: '3.5rem', md: 'clamp(3.5rem, 6vw, 6.5rem)' }
                 }}
                 dangerouslySetInnerHTML={{ __html: t.contact.title }}
               />
@@ -205,7 +203,7 @@ export default function ContactSection() {
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({...formData, name: e.target.value})}
-                        InputLabelProps={{ sx: { fontWeight: 800, letterSpacing: '0.1em', fontSize: '10px' } }}
+                        InputLabelProps={{ sx: { fontWeight: 800, letterSpacing: '0.1em', fontSize: '10px', lineHeight: 1 } }}
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
@@ -217,7 +215,7 @@ export default function ContactSection() {
                         required 
                         value={formData.email}
                         onChange={(e) => setFormData({...formData, email: e.target.value})}
-                        InputLabelProps={{ sx: { fontWeight: 800, letterSpacing: '0.1em', fontSize: '10px' } }}
+                        InputLabelProps={{ sx: { fontWeight: 800, letterSpacing: '0.1em', fontSize: '10px', lineHeight: 1 } }}
                       />
                     </Grid>
                   </Grid>
@@ -232,7 +230,7 @@ export default function ContactSection() {
                           required
                           value={formData.projectType}
                           onChange={(e) => setFormData({...formData, projectType: e.target.value})}
-                          InputLabelProps={{ sx: { fontWeight: 800, letterSpacing: '0.1em', fontSize: '10px' } }}
+                          InputLabelProps={{ sx: { fontWeight: 800, letterSpacing: '0.1em', fontSize: '10px', lineHeight: 1 } }}
                         />
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6 }}>
@@ -243,7 +241,7 @@ export default function ContactSection() {
                           required
                           value={formData.estBudget}
                           onChange={(e) => setFormData({...formData, estBudget: e.target.value})}
-                          InputLabelProps={{ sx: { fontWeight: 800, letterSpacing: '0.1em', fontSize: '10px' } }}
+                          InputLabelProps={{ sx: { fontWeight: 800, letterSpacing: '0.1em', fontSize: '10px', lineHeight: 1 } }}
                         />
                       </Grid>
                     </Grid>
@@ -258,7 +256,7 @@ export default function ContactSection() {
                           required
                           value={formData.deadline}
                           onChange={(e) => setFormData({...formData, deadline: e.target.value})}
-                          InputLabelProps={{ sx: { fontWeight: 800, letterSpacing: '0.1em', fontSize: '10px' } }}
+                          InputLabelProps={{ sx: { fontWeight: 800, letterSpacing: '0.1em', fontSize: '10px', lineHeight: 1 } }}
                         />
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6 }}>
@@ -269,7 +267,7 @@ export default function ContactSection() {
                           required
                           value={formData.goals}
                           onChange={(e) => setFormData({...formData, goals: e.target.value})}
-                          InputLabelProps={{ sx: { fontWeight: 800, letterSpacing: '0.1em', fontSize: '10px' } }}
+                          InputLabelProps={{ sx: { fontWeight: 800, letterSpacing: '0.1em', fontSize: '10px', lineHeight: 1 } }}
                         />
                       </Grid>
                     </Grid>

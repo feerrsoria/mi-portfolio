@@ -1,23 +1,21 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { UserButton, useUser, useClerk } from "@clerk/nextjs";
+import { UserButton } from "./UserButton";
+import { useAuth } from "@/context/AuthContext";
 import { AppBar, Toolbar, Typography, Button, Container, Stack, Box, Menu, MenuItem } from "@mui/material";
 import { useLanguage } from "@/context/LanguageContext";
 import { Globe, Shield } from "lucide-react";
 
 export default function NavBar() {
-    const { user, isLoaded, isSignedIn } = useUser();
+    const { user, loading, isAdmin } = useAuth();
+
     const { t, language, setLanguage } = useLanguage();
     const [mounted, setMounted] = useState(false);
     
     useEffect(() => {
         setMounted(true);
     }, []);
-
-    const adminEmailsStr = process.env.NEXT_PUBLIC_ADMIN_EMAILS || "bercho001@gmail.com,fernandosoria1379@gmail.com";
-    const ADMIN_EMAILS = adminEmailsStr.split(",").map(e => e.trim());
-    const isAdmin = user?.primaryEmailAddress?.emailAddress && ADMIN_EMAILS.includes(user.primaryEmailAddress.emailAddress);
 
     if (!mounted) return null;
 
@@ -28,7 +26,7 @@ export default function NavBar() {
             borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
             zIndex: (theme) => theme.zIndex.drawer + 1
         }}>
-            <Container maxWidth="xl">
+            <Container maxWidth="xl" sx={{ pl: { xs: 2, lg: '100px' }, ml: 0 }}>
                 <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
                     <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
                         <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: '-0.05em' }}>
@@ -64,8 +62,8 @@ export default function NavBar() {
                             {language.toUpperCase()}
                         </Button>
 
-                        {isLoaded && (
-                            isSignedIn ? (
+                        {!loading && (
+                            user ? (
                                 <Stack direction="row" spacing={2} alignItems="center">
                                     <Link href="/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>
                                         <Typography variant="caption" sx={{ fontWeight: 700, letterSpacing: '0.1em' }}>

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowDownRight } from "lucide-react";
-import { Box, Typography, Container, Grid } from "@mui/material";
+import { Box, Typography, Container, Grid2 as Grid } from "@mui/material";
 import { useLanguage } from "@/context/LanguageContext";
 import { db } from "@/lib/firebase";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
@@ -24,8 +24,15 @@ export default function Hero() {
   if (!mounted) return null;
 
   return (
-    <Box component="section" sx={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', pt: 16 }}>
-      <Container maxWidth="xl">
+    <Box component="section" sx={{ 
+      minHeight: '80vh', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      justifyContent: 'center', 
+      pt: 16,
+      pl: { xs: 0, lg: '100px' }
+    }}>
+      <Container maxWidth="xl" disableGutters sx={{ ml: 0 }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -33,11 +40,8 @@ export default function Hero() {
           transition={{ duration: 0.8 }}
         >
           <Typography variant="h1" sx={{ 
-            fontSize: { xs: '3.5rem', md: '8rem' }, 
-            fontWeight: 800, 
-            letterSpacing: '-0.05em', 
-            lineHeight: 1, 
-            mb: 3 
+            fontSize: { xs: '3.5rem', md: 'clamp(5rem, 10vw, 11rem)' }, 
+            mb: 6
           }} dangerouslySetInnerHTML={{ __html: t.hero.title }} />
           
           <Typography variant="h5" sx={{ 

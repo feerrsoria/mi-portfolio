@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { db, auth } from "@/lib/firebase";
 import { signInWithCustomToken } from "firebase/auth";
-import { useAuth, useUser } from "@clerk/nextjs";
+import { useAuth } from "@/context/AuthContext";
 import { collection, onSnapshot, query, orderBy, addDoc, serverTimestamp, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { 
   Box, 
@@ -97,8 +97,7 @@ export default function AdminDashboard() {
   const [alertDialog, setAlertDialog] = useState<{ open: boolean, title: string, message: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { getToken } = useAuth();
-  const { user } = useUser();
+  const { user } = useAuth();
 
   useEffect(() => {
     const unsubR = onSnapshot(query(collection(db, "contactRequests"), orderBy("createdAt", "desc")), (snap) => setRequests(snap.docs.map(d => ({id: d.id, ...d.data()}))));

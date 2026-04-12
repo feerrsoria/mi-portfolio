@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 import NavBar from "./components/NavBar";
 import RootStyleRegistry from "./RootStyleRegistry";
-import { ClerkProvider } from "@clerk/nextjs";
+import { AuthProvider } from "@/context/AuthContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 
 const geistSans = Geist({
@@ -31,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <AuthProvider>
       <LanguageProvider>
         <html lang="en" suppressHydrationWarning>
           <body
@@ -45,6 +45,6 @@ export default function RootLayout({
           </body>
         </html>
       </LanguageProvider>
-    </ClerkProvider>
+    </AuthProvider>
   );
 }

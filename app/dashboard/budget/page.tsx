@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/context/AuthContext";
 import { 
   Box, 
   Typography, 
@@ -19,7 +19,7 @@ import { motion } from "framer-motion";
 import { Send } from "lucide-react";
 
 export default function BudgetPage() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
@@ -35,9 +35,9 @@ export default function BudgetPage() {
     try {
       await addDoc(collection(db, "budgets"), {
         ...formData,
-        userId: user?.id,
-        userEmail: user?.primaryEmailAddress?.emailAddress,
-        userName: user?.fullName,
+        userId: user?.uid,
+        userEmail: user?.email,
+        userName: user?.displayName,
         status: "pending",
         createdAt: serverTimestamp()
       });

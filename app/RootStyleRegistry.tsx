@@ -19,12 +19,12 @@ const theme = createTheme({
   },
   typography: {
     fontFamily: 'var(--font-geist-sans), sans-serif',
-    h1: { fontFamily: 'var(--font-playfair), serif' },
-    h2: { fontFamily: 'var(--font-playfair), serif' },
-    h3: { fontFamily: 'var(--font-playfair), serif' },
-    h4: { fontFamily: 'var(--font-playfair), serif' },
-    h5: { fontFamily: 'var(--font-playfair), serif' },
-    h6: { fontFamily: 'var(--font-playfair), serif' },
+    h1: { fontFamily: 'var(--font-playfair), serif', lineHeight: 1.0, letterSpacing: '-0.05em', fontWeight: 800 },
+    h2: { fontFamily: 'var(--font-playfair), serif', lineHeight: 1.0, letterSpacing: '-0.05em', fontWeight: 800 },
+    h3: { fontFamily: 'var(--font-playfair), serif', lineHeight: 1.0, letterSpacing: '-0.05em', fontWeight: 800 },
+    h4: { fontFamily: 'var(--font-playfair), serif', lineHeight: 1.0, letterSpacing: '-0.05em', fontWeight: 800 },
+    h5: { fontFamily: 'var(--font-playfair), serif', lineHeight: 1.0, letterSpacing: '-0.05em', fontWeight: 700 },
+    h6: { fontFamily: 'var(--font-playfair), serif', lineHeight: 1.0, letterSpacing: '-0.05em', fontWeight: 600 },
   },
 });
 

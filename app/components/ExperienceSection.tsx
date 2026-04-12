@@ -23,8 +23,8 @@ export default function ExperienceSection() {
   if (loading) return null;
 
   return (
-    <Box component="section" id="experience" sx={{ py: 12, bgcolor: 'white' }}>
-      <Container maxWidth="xl">
+    <Box component="section" id="experience" sx={{ py: 12, bgcolor: 'white', pl: { xs: 0, lg: '100px' } }}>
+      <Container maxWidth="xl" disableGutters sx={{ ml: 0 }}>
         <motion.div
            initial={{ opacity: 0 }}
            whileInView={{ opacity: 1 }}
@@ -34,7 +34,7 @@ export default function ExperienceSection() {
           <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.2em', color: 'rgba(0,0,0,0.4)', textTransform: 'uppercase' }}>
             {t.experience.subtitle}
           </Typography>
-          <Typography variant="h2" sx={{ fontWeight: 800, letterSpacing: '-0.05em', mt: 2, fontSize: { xs: '3rem', md: '5rem' } }}>
+          <Typography variant="h2" sx={{ mt: 2, fontSize: { xs: '3rem', md: 'clamp(3rem, 6vw, 6rem)' } }}>
             {t.experience.title}
           </Typography>
         </motion.div>

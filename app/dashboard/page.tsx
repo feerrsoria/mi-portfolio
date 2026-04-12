@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/context/AuthContext";
 import { Box, Typography, Grid, Paper, Stack, CircularProgress } from "@mui/material";
 import { motion } from "framer-motion";
 import { Clock, CheckCircle, MessageSquare, AlertCircle } from "lucide-react";
@@ -9,7 +9,7 @@ import { db } from "@/lib/firebase";
 import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
 
 export default function DashboardPage() {
-  const { user, isLoaded } = useUser();
+  const { user, loading: isLoaded } = useAuth();
   const { t } = useLanguage();
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

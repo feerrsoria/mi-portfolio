@@ -24,8 +24,8 @@ export default function ProjectsSection() {
   if (loading) return null;
 
   return (
-    <Box component="section" id="projects" sx={{ py: 12 }}>
-      <Container maxWidth="xl">
+    <Box component="section" id="projects" sx={{ py: 12, pl: { xs: 0, lg: '100px' } }}>
+      <Container maxWidth="xl" disableGutters sx={{ ml: 0 }}>
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -35,7 +35,7 @@ export default function ProjectsSection() {
           <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.2em', color: 'rgba(0,0,0,0.4)', textTransform: 'uppercase' }}>
             {t.projects.subtitle}
           </Typography>
-          <Typography variant="h2" sx={{ fontWeight: 800, letterSpacing: '-0.05em', mt: 2, fontSize: { xs: '3rem', md: '5rem' } }}>
+          <Typography variant="h2" sx={{ mt: 2, fontSize: { xs: '3rem', md: 'clamp(3rem, 6vw, 6rem)' } }}>
             {t.projects.title}
           </Typography>
         </motion.div>

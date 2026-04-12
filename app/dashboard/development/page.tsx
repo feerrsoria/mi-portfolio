@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/context/AuthContext";
 import { 
   Box, 
   Typography, 
@@ -17,7 +17,7 @@ import { motion } from "framer-motion";
 import { CheckCircle2, Circle } from "lucide-react";
 
 export default function DevelopmentPage() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [projects, setProjects] = useState<any[]>([]);
 
   useEffect(() => {
