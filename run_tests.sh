@@ -40,6 +40,9 @@ run_test_section() {
     echo "" >> $OUTPUT_FILE
 }
 
+# 0. Type Checking
+run_test_section "Static Analysis (Type Checking)" "npm run test:compile"
+
 # 1. Unit Tests
 run_test_section "Unit Tests (Client Component Layer)" "npx vitest run tests/unit --coverage --coverage.reporter=text"
 

@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:compile": "tsc --noEmit",
+    "test:all": "npm run test:compile && npm run lint && sh run_tests.sh"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",

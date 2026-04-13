@@ -1,17 +1,28 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { Box, Typography, Grid, Paper, Stack, CircularProgress } from "@mui/material";
+import { Box, Typography, Paper, Stack, CircularProgress } from "@mui/material";
+import Grid from "@mui/material/Grid2";
 import { motion } from "framer-motion";
 import { Clock, CheckCircle, MessageSquare, AlertCircle } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { db } from "@/lib/firebase";
 import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
 
+interface ContactRequest {
+  id: string;
+  type?: string;
+  projectType?: string;
+  goals?: string;
+  status?: string;
+  createdAt?: { toDate: () => Date };
+  [key: string]: unknown;
+}
+
 export default function DashboardPage() {
   const { user, loading: isLoaded } = useAuth();
   const { t } = useLanguage();
-  const [requests, setRequests] = useState<any[]>([]);
+  const [requests, setRequests] = useState<ContactRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,7 +30,7 @@ export default function DashboardPage() {
 
     const q = query(
       collection(db, "contactRequests"), 
-      where("userId", "==", user.id),
+      where("userId", "==", user.uid),
       orderBy("createdAt", "desc")
     );
 
@@ -58,11 +69,11 @@ export default function DashboardPage() {
           {t.dashboard.welcome}
         </Typography>
         <Typography variant="h3" sx={{ fontWeight: 800, letterSpacing: '-0.02em', mt: 1, mb: 6 }}>
-          {t.dashboard.hello}, {user?.firstName?.toUpperCase()}
+          {t.dashboard.hello}, {user?.displayName?.split(" ")[0]?.toUpperCase()}
         </Typography>
 
         <Grid container spacing={4}>
-          {stats.map((stat, i) => (
+          {stats.map((stat) => (
             <Grid size={{ xs: 12, sm: 4 }} key={stat.label}>
               <Paper elevation={0} sx={{ 
                 p: 4, 
@@ -102,7 +113,7 @@ export default function DashboardPage() {
                       <Typography variant="caption" sx={{ color: 'rgba(0,0,0,0.4)', textTransform: 'uppercase' }}>
                         {r.createdAt?.toDate().toLocaleDateString()} • STATUS: 
                         <span style={{ fontWeight: 800, marginLeft: '4px', color: r.status === 'pending' ? 'orange' : 'green' }}>
-                            {r.status.toUpperCase()}
+                            {r.status?.toUpperCase()}
                         </span>
                       </Typography>
                     </Box>

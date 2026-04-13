@@ -22,10 +22,9 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
-  CircularProgress,
-  Alert
+  CircularProgress
 } from "@mui/material";
-import { Mail, Phone, Github, Linkedin, MapPin, Send, CheckCircle2 } from "lucide-react";
+import { Github, Linkedin, CheckCircle2, Send } from "lucide-react";
 
 export default function ContactSection() {
   const { user } = useAuth();

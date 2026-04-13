@@ -8,13 +8,12 @@ import {
   Typography, 
   TextField, 
   Button, 
-  Grid, 
   Paper, 
-  Stack, 
   MenuItem,
   Alert,
   Snackbar
 } from "@mui/material";
+import Grid from "@mui/material/Grid2";
 import { motion } from "framer-motion";
 import { Send } from "lucide-react";
 
@@ -54,7 +53,7 @@ export default function BudgetPage() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <Typography variant="h3" sx={{ fontWeight: 800, letterSpacing: '-0.02em', mb: 2 }}>REQUEST BUDGET</Typography>
         <Typography variant="body1" sx={{ color: 'rgba(0,0,0,0.5)', mb: 8, maxWidth: '600px' }}>
-          Tell me about your project and I'll get back to you with a detailed estimate within 24 hours.
+          Tell me about your project and I&apos;ll get back to you with a detailed estimate within 24 hours.
         </Typography>
 
         <Paper elevation={0} sx={{ p: { xs: 4, md: 8 }, border: '1px solid rgba(0,0,0,0.05)', borderRadius: 0 }}>

@@ -7,9 +7,23 @@ import { useLanguage } from "@/context/LanguageContext";
 import { db } from "@/lib/firebase";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 
+interface ProjectData {
+  id: string;
+  title?: string;
+  subtitle_en?: string;
+  subtitle_es?: string;
+  description_en?: string;
+  description_es?: string;
+  imageUrl?: string;
+  tech?: string[];
+  live?: string;
+  github?: string;
+  [key: string]: unknown;
+}
+
 export default function ProjectsSection() {
   const { t, language } = useLanguage();
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<ProjectData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -63,38 +77,38 @@ export default function ProjectsSection() {
                   justifyContent: 'center',
                 }}>
                   {project.imageUrl ? (
-                    <Box component="img" src={project.imageUrl} alt={project.title} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <Box component="img" src={String(project.imageUrl)} alt={String(project.title)} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     <Typography variant="h3" sx={{ fontWeight: 800, color: 'rgba(0,0,0,0.1)', textTransform: 'uppercase' }}>
-                      {project.title}
+                      {String(project.title)}
                     </Typography>
                   )}
                 </Box>
 
                 <Box sx={{ flex: 1 }}>
-                  <Typography variant="h3" sx={{ fontWeight: 800, letterSpacing: '-0.02em', fontSize: { xs: '2.5rem', md: '3.5rem' } }}>{project.title}</Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 800, letterSpacing: '-0.02em', fontSize: { xs: '2.5rem', md: '3.5rem' } }}>{String(project.title)}</Typography>
                   <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.2em', opacity: 0.4, mt: 1, display: 'block' }}>
-                    {language === 'en' ? project.subtitle_en : project.subtitle_es}
+                    {language === 'en' ? String(project.subtitle_en) : String(project.subtitle_es)}
                   </Typography>
                   
                   <Typography variant="body1" sx={{ mt: 3, mb: 4, fontWeight: 300, color: 'rgba(0,0,0,0.7)', lineHeight: 1.8, fontSize: '1.1rem' }}>
-                    {language === 'en' ? project.description_en : project.description_es}
+                    {language === 'en' ? String(project.description_en) : String(project.description_es)}
                   </Typography>
 
                   <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mb: 4 }}>
-                    {project.tech?.map((tech: string) => (
+                    {project.tech && project.tech.map((tech: string) => (
                       <Chip key={tech} label={tech} variant="outlined" sx={{ borderRadius: 0, fontWeight: 700, fontSize: '10px', textTransform: 'uppercase' }} />
                     ))}
                   </Stack>
 
                   <Stack direction="row" spacing={4}>
                     {project.live && (
-                        <MuiLink href={project.live} target="_blank" sx={{ color: 'black', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 1, fontWeight: 800, fontSize: '0.75rem' }}>
+                        <MuiLink href={String(project.live)} target="_blank" sx={{ color: 'black', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 1, fontWeight: 800, fontSize: '0.75rem' }}>
                         {t.projects.liveDemo} <ExternalLink size={14} />
                       </MuiLink>
                     )}
                     {project.github && (
-                        <MuiLink href={project.github} target="_blank" sx={{ color: 'black', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 1, fontWeight: 800, fontSize: '0.75rem' }}>
+                        <MuiLink href={String(project.github)} target="_blank" sx={{ color: 'black', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 1, fontWeight: 800, fontSize: '0.75rem' }}>
                         {t.projects.github} <Github size={14} />
                       </MuiLink>
                     )}

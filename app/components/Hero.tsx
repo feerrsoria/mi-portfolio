@@ -7,9 +7,17 @@ import { useLanguage } from "@/context/LanguageContext";
 import { db } from "@/lib/firebase";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 
+interface ProjectData {
+  id: string;
+  title?: string;
+  subtitle_en?: string;
+  subtitle_es?: string;
+  [key: string]: unknown;
+}
+
 export default function Hero() {
   const { t, language } = useLanguage();
-  const [featuredProjects, setFeaturedProjects] = useState<any[]>([]);
+  const [featuredProjects, setFeaturedProjects] = useState<ProjectData[]>([]);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -62,10 +70,10 @@ export default function Hero() {
                   {i === 0 ? t.hero.latestProject : t.hero.communication}
                 </Typography>
                 <Typography variant="h4" sx={{ fontWeight: 800, '&:hover': { fontStyle: 'italic' }, transition: 'all 0.3s', cursor: 'pointer' }}>
-                  {p.title}
+                  {String(p.title)}
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'rgba(0,0,0,0.4)', mt: 1 }}>
-                  {language === 'en' ? p.subtitle_en : p.subtitle_es}
+                  {language === 'en' ? String(p.subtitle_en) : String(p.subtitle_es)}
                 </Typography>
               </Box>
             </Grid>

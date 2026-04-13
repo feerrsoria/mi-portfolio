@@ -8,15 +8,13 @@ import {
   Typography, 
   TextField, 
   Button, 
-  Grid, 
   Paper, 
-  Stack, 
   Alert,
-  Snackbar,
-  Divider
+  Snackbar
 } from "@mui/material";
+import Grid from "@mui/material/Grid2";
 import { motion } from "framer-motion";
-import { Calendar as CalendarIcon, Clock } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 
 export default function AppointmentsPage() {
   const { user } = useAuth();
@@ -124,7 +122,7 @@ export default function AppointmentsPage() {
 
       <Snackbar open={success} autoHideDuration={6000} onClose={() => setSuccess(false)}>
         <Alert onClose={() => setSuccess(false)} severity="success" sx={{ width: '100%', borderRadius: 0, bgcolor: 'black', color: 'white' }}>
-          APPOINTMENT REQUESTED! I'LL CONFIRM SOON.
+          APPOINTMENT REQUESTED! I&apos;LL CONFIRM SOON.
         </Alert>
       </Snackbar>
     </Box>

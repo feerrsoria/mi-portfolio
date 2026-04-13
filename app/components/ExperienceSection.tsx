@@ -6,9 +6,21 @@ import { useLanguage } from "@/context/LanguageContext";
 import { db } from "@/lib/firebase";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 
+interface ExperienceData {
+  id: string;
+  role_en?: string;
+  role_es?: string;
+  company?: string;
+  description_en?: string;
+  description_es?: string;
+  period_en?: string;
+  period_es?: string;
+  [key: string]: unknown;
+}
+
 export default function ExperienceSection() {
   const { t, language } = useLanguage();
-  const [experiences, setExperiences] = useState<any[]>([]);
+  const [experiences, setExperiences] = useState<ExperienceData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -52,16 +64,16 @@ export default function ExperienceSection() {
                 <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={4}>
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>
-                        {language === 'en' ? exp.role_en : exp.role_es}
+                        {language === 'en' ? String(exp.role_en) : String(exp.role_es)}
                     </Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: 'rgba(0,0,0,0.6)', mt: 1 }}>{exp.company}</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: 'rgba(0,0,0,0.6)', mt: 1 }}>{String(exp.company)}</Typography>
                   </Box>
                   <Box sx={{ flex: 1, maxWidth: '600px' }}>
                     <Typography variant="body1" sx={{ fontWeight: 300, color: 'rgba(0,0,0,0.7)', lineHeight: 1.8, mb: 2 }}>
-                        {language === 'en' ? exp.description_en : exp.description_es}
+                        {language === 'en' ? String(exp.description_en) : String(exp.description_es)}
                     </Typography>
                     <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.2em', opacity: 0.4, textTransform: 'uppercase' }}>
-                        {language === 'en' ? exp.period_en : exp.period_es}
+                        {language === 'en' ? String(exp.period_en) : String(exp.period_es)}
                     </Typography>
                   </Box>
                 </Stack>

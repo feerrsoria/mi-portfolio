@@ -1,13 +1,11 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { db, auth } from "@/lib/firebase";
-import { signInWithCustomToken } from "firebase/auth";
+import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
-import { collection, onSnapshot, query, orderBy, addDoc, serverTimestamp, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, addDoc, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { 
   Box, 
   Typography, 
-  Grid, 
   Paper, 
   Stack, 
   Tabs, 
@@ -22,10 +20,11 @@ import {
   DialogActions,
   TextField
 } from "@mui/material";
-import { Mail, Clock, ExternalLink, Calendar, Trash2, Plus, Database, Edit, Upload } from "lucide-react";
+import Grid from "@mui/material/Grid2";
+import { Mail, Trash2, Database, Edit, Upload } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
-const AdminCard = ({ title, subtitle, date, user, status, content, actionIcon: Icon, onDelete, onEdit }: any) => (
+const AdminCard = ({ title, subtitle, date, user, status, content, onDelete, onEdit }: { title: string; subtitle?: string; date?: string; user?: string; status?: string; content: string; onDelete: () => void; onEdit?: () => void }) => (
   <Paper elevation={0} sx={{ 
     p: 4, 
     bgcolor: 'rgba(255,255,255,0.03)', 
@@ -86,18 +85,22 @@ const AdminCard = ({ title, subtitle, date, user, status, content, actionIcon: I
   </Paper>
 );
 
+interface ContactRequest { id: string; type?: string; name?: string; userEmail?: string; status?: string; message?: string; createdAt?: { toDate: () => Date }; [key: string]: unknown; }
+interface ProjectData { id: string; title?: string; subtitle_en?: string; description_en?: string; imageUrl?: string; live?: string; github?: string; order?: number; subtitle_es?: string; description_es?: string; [key: string]: unknown; }
+interface ExperienceData { id: string; role_en?: string; company?: string; description_en?: string; [key: string]: unknown; }
+
 export default function AdminDashboard() {
-  const [requests, setRequests] = useState<any[]>([]);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [experience, setExperience] = useState<any[]>([]);
+  const [requests, setRequests] = useState<ContactRequest[]>([]);
+  const [projects, setProjects] = useState<ProjectData[]>([]);
+  const [experience, setExperience] = useState<ExperienceData[]>([]);
   const [activeTab, setActiveTab] = useState(0);
-  const [editingProject, setEditingProject] = useState<any>(null);
+  const [editingProject, setEditingProject] = useState<ProjectData | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean, title: string, message: string, onConfirm: () => void } | null>(null);
   const [alertDialog, setAlertDialog] = useState<{ open: boolean, title: string, message: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { user } = useAuth();
+  const {} = useAuth();
 
   useEffect(() => {
     const unsubR = onSnapshot(query(collection(db, "contactRequests"), orderBy("createdAt", "desc")), (snap) => setRequests(snap.docs.map(d => ({id: d.id, ...d.data()}))));
@@ -122,7 +125,7 @@ export default function AdminDashboard() {
   const saveProject = async () => {
     if (editingProject && editingProject.id) {
       const { id, ...data } = editingProject;
-      await updateDoc(doc(db, "projects", id), data);
+      await updateDoc(doc(db, "projects", String(id)), data);
       setEditingProject(null);
     }
   };
@@ -147,13 +150,13 @@ export default function AdminDashboard() {
         .from('projects')
         .getPublicUrl(filePath);
 
-      setEditingProject((prev: any) => ({ ...prev, imageUrl: data.publicUrl }));
-    } catch (error: any) {
+      setEditingProject((prev: ProjectData | null) => prev ? { ...prev, imageUrl: data.publicUrl } : null);
+    } catch (error: unknown) {
       console.error('Error uploading image:', error);
       setAlertDialog({
         open: true,
         title: 'Upload Failed',
-        message: 'Failed to upload image. Please ensure your Supabase configuration is correct and the bucket "projects" exists and is public.\n\nDetails: ' + (error?.message || 'Unknown error')
+        message: 'Failed to upload image. Please ensure your Supabase configuration is correct and the bucket "projects" exists and is public.\n\nDetails: ' + (error instanceof Error ? error.message : 'Unknown error')
       });
     } finally {
       setUploadingImage(false);
@@ -260,11 +263,11 @@ export default function AdminDashboard() {
                <Grid size={{ xs: 12, md: 6 }} key={r.id}>
                  <AdminCard 
                    title={r.type === 'budget' ? "Budget Request" : "Project Proposal"}
-                   subtitle={r.name}
-                   user={r.userEmail}
-                   date={r.createdAt?.toDate().toLocaleDateString()}
-                   status={r.status}
-                   content={r.message}
+                   subtitle={String(r.name || '')}
+                   user={String(r.userEmail || '')}
+                   date={(r.createdAt as { toDate: () => Date })?.toDate().toLocaleDateString()}
+                   status={String(r.status || '')}
+                   content={String(r.message || '')}
                    onDelete={() => handleDelete("contactRequests", r.id)}
                  />
                </Grid>
@@ -273,9 +276,9 @@ export default function AdminDashboard() {
             {activeTab === 1 && projects.map(p => (
                <Grid size={{ xs: 12, md: 6 }} key={p.id}>
                  <AdminCard 
-                   title={p.title}
-                   subtitle={p.subtitle_en}
-                   content={p.description_en}
+                   title={String(p.title || '')}
+                   subtitle={String(p.subtitle_en || '')}
+                   content={String(p.description_en || '')}
                    onDelete={() => handleDelete("projects", p.id)}
                    onEdit={() => setEditingProject(p)}
                  />
@@ -285,9 +288,9 @@ export default function AdminDashboard() {
             {activeTab === 2 && experience.map(e => (
                <Grid size={{ xs: 12, md: 6 }} key={e.id}>
                  <AdminCard 
-                   title={e.role_en}
-                   subtitle={e.company}
-                   content={e.description_en}
+                   title={String(e.role_en || '')}
+                   subtitle={String(e.company || '')}
+                   content={String(e.description_en || '')}
                    onDelete={() => handleDelete("experience", e.id)}
                  />
                </Grid>

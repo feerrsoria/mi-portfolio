@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { UserButton } from "./UserButton";
 import { useAuth } from "@/context/AuthContext";
-import { AppBar, Toolbar, Typography, Button, Container, Stack, Box, Menu, MenuItem } from "@mui/material";
+import { AppBar, Toolbar, Typography, Button, Container, Stack } from "@mui/material";
 import { useLanguage } from "@/context/LanguageContext";
 import { Globe, Shield } from "lucide-react";
 

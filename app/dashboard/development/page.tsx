@@ -6,23 +6,30 @@ import { useAuth } from "@/context/AuthContext";
 import { 
   Box, 
   Typography, 
-  Grid, 
   Paper, 
   Stack, 
   LinearProgress,
-  Divider,
   Chip
 } from "@mui/material";
 import { motion } from "framer-motion";
 import { CheckCircle2, Circle } from "lucide-react";
+interface DevProject {
+  id: string;
+  name?: string;
+  createdAt?: { toDate: () => Date };
+  status?: string;
+  progress?: number;
+  milestones?: { completed?: boolean; text?: string; }[];
+  [key: string]: unknown;
+}
 
 export default function DevelopmentPage() {
   const { user } = useAuth();
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<DevProject[]>([]);
 
   useEffect(() => {
     if (!user) return;
-    const q = query(collection(db, "projects"), where("clientId", "==", user.id));
+    const q = query(collection(db, "projects"), where("clientId", "==", user.uid));
     const unsub = onSnapshot(q, (snap) => {
       setProjects(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
@@ -49,30 +56,30 @@ export default function DevelopmentPage() {
               <Paper key={proj.id} elevation={0} sx={{ p: 6, border: '1px solid rgba(0,0,0,0.05)', borderRadius: 0 }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 4 }}>
                   <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 800 }}>{proj.name}</Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 800 }}>{String(proj.name || '')}</Typography>
                     <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.1em', opacity: 0.4, textTransform: 'uppercase' }}>
                       STARTED: {proj.createdAt?.toDate().toLocaleDateString()}
                     </Typography>
                   </Box>
-                  <Chip label={proj.status.toUpperCase()} sx={{ borderRadius: 0, fontWeight: 800, bgcolor: 'black', color: 'white' }} />
+                  <Chip label={String(proj.status || '').toUpperCase()} sx={{ borderRadius: 0, fontWeight: 800, bgcolor: 'black', color: 'white' }} />
                 </Stack>
 
                 <Box sx={{ mb: 6 }}>
                   <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
                     <Typography variant="caption" sx={{ fontWeight: 800 }}>DEVELOPMENT PROGRESS</Typography>
-                    <Typography variant="caption" sx={{ fontWeight: 800 }}>{proj.progress}%</Typography>
+                    <Typography variant="caption" sx={{ fontWeight: 800 }}>{Number(proj.progress || 0)}%</Typography>
                   </Stack>
-                  <LinearProgress variant="determinate" value={proj.progress} sx={{ height: 8, bgcolor: 'rgba(0,0,0,0.05)', '& .MuiLinearProgress-bar': { bgcolor: 'black' } }} />
+                  <LinearProgress variant="determinate" value={Number(proj.progress || 0)} sx={{ height: 8, bgcolor: 'rgba(0,0,0,0.05)', '& .MuiLinearProgress-bar': { bgcolor: 'black' } }} />
                 </Box>
 
                 <Box>
                   <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.1em', opacity: 0.4, display: 'block', mb: 3 }}>RECENT MILESTONES</Typography>
                   <Stack spacing={2}>
-                    {proj.milestones?.map((m: any, idx: number) => (
+                    {proj.milestones && Array.isArray(proj.milestones) && proj.milestones.map((m, idx: number) => (
                       <Stack key={idx} direction="row" spacing={2} alignItems="center">
                         {m.completed ? <CheckCircle2 size={18} /> : <Circle size={18} style={{ opacity: 0.2 }} />}
                         <Typography variant="body2" sx={{ fontWeight: m.completed ? 600 : 400, opacity: m.completed ? 1 : 0.4 }}>
-                          {m.text}
+                          {String(m.text)}
                         </Typography>
                       </Stack>
                     ))}
