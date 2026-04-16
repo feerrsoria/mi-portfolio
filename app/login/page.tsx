@@ -16,7 +16,9 @@ import {
 import { motion } from "framer-motion";
 import Loader from "@/app/components/Loader";
 
-export default function LoginPage() {
+import { Suspense } from "react";
+
+function LoginContent() {
   const { loginWithGoogle, loginWithEmail, registerWithEmail, user, loading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -174,5 +176,13 @@ export default function LoginPage() {
         </motion.div>
       </Container>
     </Box>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<Loader fullScreen />}>
+      <LoginContent />
+    </Suspense>
   );
 }
