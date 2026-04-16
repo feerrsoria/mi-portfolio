@@ -3,6 +3,8 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { 
   onAuthStateChanged, 
   signInWithPopup, 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut, 
   User 
 } from "firebase/auth";
@@ -12,6 +14,8 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   loginWithGoogle: () => Promise<void>;
+  loginWithEmail: (e: string, p: string) => Promise<void>;
+  registerWithEmail: (e: string, p: string) => Promise<void>;
   logout: () => Promise<void>;
   isAdmin: boolean;
 }
@@ -45,6 +49,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
       console.error("Login failed", error);
+      throw error;
+    }
+  };
+
+  const loginWithEmail = async (e: string, p: string) => {
+    try {
+      await signInWithEmailAndPassword(auth, e, p);
+    } catch (error) {
+      console.error("Login with email failed", error);
+      throw error;
+    }
+  };
+
+  const registerWithEmail = async (e: string, p: string) => {
+    try {
+      await createUserWithEmailAndPassword(auth, e, p);
+    } catch (error) {
+      console.error("Register with email failed", error);
+      throw error;
     }
   };
 
@@ -57,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, loginWithGoogle, logout, isAdmin }}>
+    <AuthContext.Provider value={{ user, loading, loginWithGoogle, loginWithEmail, registerWithEmail, logout, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

@@ -33,6 +33,7 @@ export default function ContactSection() {
   const [openDialog, setOpenDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [autoSubmitData, setAutoSubmitData] = useState<any>(null);
   const [requestType, setRequestType] = useState('budget');
   const [takenSlots, setTakenSlots] = useState<string[]>([]);
   const [formData, setFormData] = useState({ 
@@ -69,10 +70,48 @@ export default function ContactSection() {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (user && mounted) {
+      const pendingStr = sessionStorage.getItem("pendingContactRequest");
+      if (pendingStr) {
+        try {
+          const pendingData = JSON.parse(pendingStr);
+          sessionStorage.removeItem("pendingContactRequest");
+          
+          const submitCached = async () => {
+            setLoading(true);
+            try {
+              await addDoc(collection(db, "contactRequests"), {
+                ...pendingData.formData,
+                userId: user.uid,
+                userEmail: user.email,
+                type: pendingData.requestType,
+                status: 'pending',
+                createdAt: serverTimestamp()
+              });
+              setAutoSubmitData({ ...pendingData.formData, type: pendingData.requestType });
+            } catch (err) {
+              console.error("Error saving cached request:", err);
+            } finally {
+              setLoading(false);
+            }
+          };
+          submitCached();
+        } catch (e) {
+          console.error("Failed to parse cached request", e);
+        }
+      }
+    }
+  }, [user, mounted]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isSignedIn) {
-      setOpenDialog(true);
+      sessionStorage.setItem("pendingContactRequest", JSON.stringify({
+        formData,
+        requestType
+      }));
+      window.location.href = "/login";
       return;
     }
 
@@ -357,22 +396,43 @@ export default function ContactSection() {
       </Container>
 
       <Dialog 
-        open={openDialog} 
-        onClose={() => setOpenDialog(false)}
-        PaperProps={{ sx: { borderRadius: 0, p: 2 } }}
+        open={!!autoSubmitData} 
+        onClose={() => setAutoSubmitData(null)}
+        PaperProps={{ sx: { borderRadius: 0, p: 2, minWidth: '300px' } }}
       >
-        <DialogTitle sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>{t.contact.loginRequired}</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 800, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: 1 }}>
+          <CheckCircle2 color="green" size={24} /> REQUEST SENT
+        </DialogTitle>
         <DialogContent>
-          <Typography variant="body2" sx={{ color: 'rgba(0,0,0,0.6)' }}>
-            {t.contact.loginMessage}
+          <Typography variant="body2" sx={{ color: 'rgba(0,0,0,0.6)', mb: 2 }}>
+            Your request has been automatically sent after login.
           </Typography>
+          {autoSubmitData && (
+            <Box sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.03)', borderRadius: 1 }}>
+              <Typography variant="caption" sx={{ fontWeight: 800, opacity: 0.5 }}>TYPE</Typography>
+              <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>{autoSubmitData.type.toUpperCase()}</Typography>
+              
+              {autoSubmitData.projectType && (
+                <>
+                  <Typography variant="caption" sx={{ fontWeight: 800, opacity: 0.5 }}>PROJECT</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>{autoSubmitData.projectType}</Typography>
+                </>
+              )}
+              
+              {autoSubmitData.appointmentDate && (
+                <>
+                  <Typography variant="caption" sx={{ fontWeight: 800, opacity: 0.5 }}>APPOINTMENT</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                    {autoSubmitData.appointmentDate} at {autoSubmitData.appointmentTime}
+                  </Typography>
+                </>
+              )}
+            </Box>
+          )}
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={() => setOpenDialog(false)} sx={{ fontWeight: 800, color: 'black' }}>
-            {t.contact.close}
-          </Button>
-          <Button component={MuiLink} href="/dashboard" variant="contained" sx={{ borderRadius: 0, fontWeight: 800 }}>
-            {t.nav.login}
+          <Button onClick={() => setAutoSubmitData(null)} variant="contained" sx={{ borderRadius: 0, fontWeight: 800 }}>
+            {t.contact.close || "CLOSE"}
           </Button>
         </DialogActions>
       </Dialog>

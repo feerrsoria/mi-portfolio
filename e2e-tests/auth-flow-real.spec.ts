@@ -8,7 +8,7 @@ test.describe('Real Connection - UI Elements check', () => {
     await page.waitForLoadState('networkidle');
 
     // NavBar shows "LOGIN" button (or "INICIAR SESIÓN" in Spanish)
-    const loginButton = page.locator('a[href="/dashboard"]').filter({ hasText: /LOGIN|INICIAR SESIÓN/i });
+    const loginButton = page.locator('a[href="/login"]').filter({ hasText: /LOGIN|INICIAR SESIÓN/i });
     await expect(loginButton).toBeVisible();
 
     // Custom menu icon button shouldn't exist initially

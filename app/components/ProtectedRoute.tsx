@@ -17,8 +17,8 @@ export default function ProtectedRoute({ children, requireAdmin = false }: Prote
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        // Redirect non-authenticated users to home
-        router.push('/');
+        // Redirect non-authenticated users to login
+        router.push('/login');
       } else if (requireAdmin && !isAdmin) {
         // Redirect non-admins to dashboard if they try to access admin
         router.push('/dashboard');
