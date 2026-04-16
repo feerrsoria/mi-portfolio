@@ -30,10 +30,14 @@ export default function ContactSection() {
   const { user } = useAuth();
   const isSignedIn = !!user;
   const { t } = useLanguage();
-  const [openDialog, setOpenDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [autoSubmitData, setAutoSubmitData] = useState<any>(null);
+  const [autoSubmitData, setAutoSubmitData] = useState<{
+    type: string;
+    projectType?: string;
+    appointmentDate?: string;
+    appointmentTime?: string;
+  } | null>(null);
   const [requestType, setRequestType] = useState('budget');
   const [takenSlots, setTakenSlots] = useState<string[]>([]);
   const [formData, setFormData] = useState({ 

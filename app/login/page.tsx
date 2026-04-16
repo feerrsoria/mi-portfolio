@@ -49,8 +49,12 @@ export default function LoginPage() {
       } else {
         await registerWithEmail(email, password);
       }
-    } catch (err: any) {
-      setError(err.message || "An error occurred");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An error occurred");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -60,8 +64,12 @@ export default function LoginPage() {
     setError("");
     try {
       await loginWithGoogle();
-    } catch (err: any) {
-      setError(err.message || "Failed to login with Google");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to login with Google");
+      }
     }
   };
 
