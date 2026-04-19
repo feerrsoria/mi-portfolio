@@ -2,6 +2,10 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Auth Flow Mocked and Redirection', () => {
   test('Redirects unauthenticated users from /dashboard to /login', async ({ page }) => {
+    // Logout first to ensure a clean state
+    await page.goto('/login');
+    await page.evaluate(() => window.localStorage.clear());
+
     // Attempt to visit protected route
     await page.goto('/dashboard');
     

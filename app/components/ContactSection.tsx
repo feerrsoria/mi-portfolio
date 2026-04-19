@@ -155,9 +155,9 @@ export default function ContactSection() {
   if (!mounted) return null;
 
   return (
-    <Box component="section" id="contact" sx={{ py: 20, bgcolor: 'white', borderTop: '1px solid rgba(0,0,0,0.05)', pl: { xs: 0, lg: '100px' } }}>
-      <Container maxWidth="xl" disableGutters sx={{ ml: 0 }}>
-        <Grid container spacing={12}>
+    <Box component="section" id="contact" sx={{ py: { xs: 10, md: 20 }, bgcolor: 'white', borderTop: '1px solid rgba(0,0,0,0.05)', pl: { xs: 0, lg: '100px' } }}>
+      <Container maxWidth="xl" sx={{ ml: 0, px: { xs: 3, md: 0 } }}>
+        <Grid container spacing={{ xs: 8, md: 12 }}>
           <Grid size={{ xs: 12, lg: 5 }}>
             <Box sx={{ position: { lg: 'sticky' }, top: 120 }}>
               <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.2em', color: 'rgba(0,0,0,0.4)', textTransform: 'uppercase' }}>
@@ -168,7 +168,8 @@ export default function ContactSection() {
                 sx={{ 
                   mt: 2, 
                   mb: 4, 
-                  fontSize: { xs: '3.5rem', md: 'clamp(3.5rem, 6vw, 6.5rem)' }
+                  fontSize: { xs: '2.5rem', sm: '3.5rem', md: 'clamp(3.5rem, 6vw, 6.5rem)' },
+                  lineHeight: { xs: 1.1, md: 1 }
                 }}
                 dangerouslySetInnerHTML={{ __html: t.contact.title }}
               />
@@ -213,7 +214,7 @@ export default function ContactSection() {
           </Grid>
 
           <Grid size={{ xs: 12, lg: 7 }}>
-            <Box component="form" onSubmit={handleSubmit} sx={{ bgcolor: 'rgba(0,0,0,0.02)', p: { xs: 4, md: 8 }, border: '1px solid rgba(0,0,0,0.05)' }}>
+            <Box component="form" onSubmit={handleSubmit} sx={{ bgcolor: 'rgba(0,0,0,0.02)', p: { xs: 3, sm: 4, md: 8 }, border: '1px solid rgba(0,0,0,0.05)' }}>
               {success ? (
                  <Stack spacing={4} alignItems="center" sx={{ py: 8 }}>
                    <CheckCircle2 size={64} color="green" />

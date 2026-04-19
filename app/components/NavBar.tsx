@@ -29,7 +29,7 @@ export default function NavBar() {
             zIndex: (theme) => theme.zIndex.drawer + 1
         }}>
             <Container maxWidth="xl" sx={{ pl: { xs: 2, lg: '100px' }, ml: 0 }}>
-                <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
+                <Toolbar disableGutters sx={{ justifyContent: 'space-between', height: { xs: 64, md: 80 } }}>
                     <Stack direction="row" alignItems="center" spacing={1}>
                         <IconButton
                             color="inherit"
@@ -41,7 +41,11 @@ export default function NavBar() {
                             <Menu size={24} />
                         </IconButton>
                         <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-                            <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: '-0.05em' }}>
+                            <Typography variant="h6" sx={{ 
+                                fontWeight: 800, 
+                                letterSpacing: '-0.05em',
+                                fontSize: { xs: '1.1rem', sm: '1.25rem' }
+                            }}>
                                 FERNANDO<span style={{ fontWeight: 300 }}>SORIA</span>
                             </Typography>
                         </Link>
@@ -65,7 +69,7 @@ export default function NavBar() {
                         </Link>
                     </Stack>
 
-                    <Stack direction="row" spacing={2} alignItems="center">
+                    <Stack direction="row" spacing={2} alignItems="center" sx={{ display: { xs: 'none', md: 'flex' } }}>
                         <Button
                             size="small"
                             onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
@@ -116,10 +120,10 @@ export default function NavBar() {
                 onClose={() => setMobileOpen(false)}
                 sx={{
                     display: { xs: 'block', md: 'none' },
-                    '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 240, bgcolor: 'white' },
+                    '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 280, bgcolor: 'white' },
                 }}
             >
-                <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+                <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
                     <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: '-0.05em' }}>
                         MENU
                     </Typography>
@@ -127,22 +131,89 @@ export default function NavBar() {
                         <X size={20} />
                     </IconButton>
                 </Box>
-                <List sx={{ pt: 2 }}>
-                    {[
-                        { label: t.nav.projects, href: '#projects' },
-                        { label: t.nav.experience, href: '#experience' },
-                        { label: t.nav.contact, href: '#contact' },
-                    ].map((item) => (
-                        <ListItem key={item.label} disablePadding>
-                            <ListItemButton component={Link} href={item.href} onClick={() => setMobileOpen(false)}>
-                                <ListItemText 
-                                    primary={item.label} 
-                                    primaryTypographyProps={{ fontWeight: 700, letterSpacing: '0.1em' }} 
-                                />
-                            </ListItemButton>
-                        </ListItem>
-                    ))}
-                </List>
+                <Stack spacing={0} sx={{ flex: 1, p: 1 }}>
+                    <List>
+                        {[
+                            { label: t.nav.projects, href: '#projects' },
+                            { label: t.nav.experience, href: '#experience' },
+                            { label: t.nav.contact, href: '#contact' },
+                        ].map((item) => (
+                            <ListItem key={item.label} disablePadding>
+                                <ListItemButton component={Link} href={item.href} onClick={() => setMobileOpen(false)} sx={{ py: 2 }}>
+                                    <ListItemText 
+                                        primary={item.label} 
+                                        primaryTypographyProps={{ fontWeight: 700, letterSpacing: '0.1em', fontSize: '0.85rem' }} 
+                                    />
+                                </ListItemButton>
+                            </ListItem>
+                        ))}
+                    </List>
+                    
+                    <Box sx={{ mt: 'auto', p: 2, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+                        <Stack spacing={3}>
+                            <Button
+                                fullWidth
+                                onClick={() => {
+                                    setLanguage(language === 'en' ? 'es' : 'en');
+                                    setMobileOpen(false);
+                                }}
+                                sx={{ justifyContent: 'flex-start', color: 'black', fontWeight: 800, fontSize: '12px' }}
+                                startIcon={<Globe size={18} />}
+                            >
+                                {language === 'en' ? 'ESPAÑOL' : 'ENGLISH'}
+                            </Button>
+
+                            {!loading && (
+                                user ? (
+                                    <Stack spacing={2}>
+                                        <Button 
+                                            fullWidth 
+                                            component={Link} 
+                                            href="/dashboard" 
+                                            onClick={() => setMobileOpen(false)}
+                                            sx={{ justifyContent: 'flex-start', color: 'black', fontWeight: 800, fontSize: '12px' }}
+                                        >
+                                            {t.nav.dashboard}
+                                        </Button>
+                                        {isAdmin && (
+                                            <Button 
+                                                fullWidth 
+                                                component={Link} 
+                                                href="/admin" 
+                                                onClick={() => setMobileOpen(false)}
+                                                sx={{ justifyContent: 'flex-start', color: 'black', fontWeight: 800, fontSize: '12px' }}
+                                                startIcon={<Shield size={18} />}
+                                            >
+                                                {t.nav.admin}
+                                            </Button>
+                                        )}
+                                        <Box sx={{ pt: 1 }}>
+                                            <UserButton />
+                                        </Box>
+                                    </Stack>
+                                ) : (
+                                    <Button 
+                                        variant="contained" 
+                                        color="primary" 
+                                        fullWidth
+                                        component={Link} 
+                                        href="/login" 
+                                        onClick={() => setMobileOpen(false)}
+                                        sx={{ 
+                                            borderRadius: 0, 
+                                            fontSize: '12px', 
+                                            fontWeight: 700, 
+                                            letterSpacing: '0.2em',
+                                            py: 2
+                                        }}
+                                    >
+                                        {t.nav.login}
+                                    </Button>
+                                )
+                            )}
+                        </Stack>
+                    </Box>
+                </Stack>
             </Drawer>
         </AppBar>
     );

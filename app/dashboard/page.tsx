@@ -68,15 +68,21 @@ export default function DashboardPage() {
         <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.2em', opacity: 0.4, textTransform: 'uppercase' }}>
           {t.dashboard.welcome}
         </Typography>
-        <Typography variant="h3" sx={{ fontWeight: 800, letterSpacing: '-0.02em', mt: 1, mb: 6 }}>
+        <Typography variant="h3" sx={{ 
+          fontWeight: 800, 
+          letterSpacing: '-0.02em', 
+          mt: 1, 
+          mb: { xs: 4, md: 6 },
+          fontSize: { xs: '2rem', md: '3rem' }
+        }}>
           {t.dashboard.hello}, {user?.displayName?.split(" ")[0]?.toUpperCase()}
         </Typography>
 
-        <Grid container spacing={4}>
+        <Grid container spacing={{ xs: 2, md: 4 }}>
           {stats.map((stat) => (
             <Grid size={{ xs: 12, sm: 4 }} key={stat.label}>
               <Paper elevation={0} sx={{ 
-                p: 4, 
+                p: { xs: 3, md: 4 }, 
                 border: '1px solid rgba(0,0,0,0.05)', 
                 borderRadius: 0,
                 display: 'flex',
@@ -85,8 +91,8 @@ export default function DashboardPage() {
               }}>
                 <stat.icon size={24} strokeWidth={1} />
                 <Box>
-                  <Typography variant="h3" sx={{ fontWeight: 800 }}>{stat.value}</Typography>
-                  <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.1em', opacity: 0.4, textTransform: 'uppercase' }}>
+                  <Typography variant="h3" sx={{ fontWeight: 800, fontSize: { xs: '1.75rem', md: '3rem' } }}>{stat.value}</Typography>
+                  <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.1em', opacity: 0.4, textTransform: 'uppercase', fontSize: '10px' }}>
                     {stat.label}
                   </Typography>
                 </Box>
@@ -95,8 +101,8 @@ export default function DashboardPage() {
           ))}
         </Grid>
 
-        <Box sx={{ mt: 12 }}>
-          <Typography variant="h5" sx={{ fontWeight: 800, mb: 4 }}>{t.dashboard.recentActivity}</Typography>
+        <Box sx={{ mt: { xs: 8, md: 12 } }}>
+          <Typography variant="h5" sx={{ fontWeight: 800, mb: 4, fontSize: { xs: '1.25rem', md: '1.5rem' } }}>{t.dashboard.recentActivity}</Typography>
           
           {requests.length > 0 ? (
             <Stack spacing={2}>

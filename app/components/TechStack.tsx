@@ -14,8 +14,8 @@ const stack = [
 export default function TechStack() {
   const { t } = useLanguage();
   return (
-    <Box component="section" sx={{ py: 12, bgcolor: 'black', color: 'white', pl: { xs: 0, lg: '100px' } }}>
-      <Container maxWidth="xl" disableGutters sx={{ ml: 0 }}>
+    <Box component="section" sx={{ py: { xs: 8, md: 12 }, bgcolor: 'black', color: 'white', pl: { xs: 0, lg: '100px' } }}>
+      <Container maxWidth="xl" sx={{ ml: 0, px: { xs: 3, md: 0 } }}>
         <motion.div
            initial={{ opacity: 0 }}
            whileInView={{ opacity: 1 }}
@@ -25,7 +25,7 @@ export default function TechStack() {
           <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.2em', opacity: 0.4, textTransform: 'uppercase' }}>
             {t.tech.subtitle}
           </Typography>
-          <Typography variant="h2" sx={{ mt: 2, fontSize: { xs: '3rem', md: 'clamp(3rem, 6vw, 6rem)' } }}>
+          <Typography variant="h2" sx={{ mt: 2, fontSize: { xs: '2.5rem', sm: '3rem', md: 'clamp(3rem, 6vw, 6rem)' } }}>
             {t.tech.title}
           </Typography>
         </motion.div>

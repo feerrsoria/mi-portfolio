@@ -33,14 +33,15 @@ export default function Hero() {
 
   return (
     <Box component="section" sx={{ 
-      minHeight: '80vh', 
+      minHeight: { xs: 'auto', md: '80vh' }, 
       display: 'flex', 
       flexDirection: 'column', 
       justifyContent: 'center', 
-      pt: 16,
+      pt: { xs: 12, md: 16 },
+      pb: { xs: 8, md: 0 },
       pl: { xs: 0, lg: '100px' }
     }}>
-      <Container maxWidth="xl" disableGutters sx={{ ml: 0 }}>
+      <Container maxWidth="xl" sx={{ ml: 0, px: { xs: 3, md: 0 } }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -48,29 +49,31 @@ export default function Hero() {
           transition={{ duration: 0.8 }}
         >
           <Typography variant="h1" sx={{ 
-            fontSize: { xs: '3.5rem', md: 'clamp(5rem, 10vw, 11rem)' }, 
-            mb: 6
+            fontSize: { xs: '2.5rem', sm: '3.5rem', md: 'clamp(5rem, 10vw, 11rem)' }, 
+            lineHeight: { xs: 1.1, md: 1 },
+            mb: { xs: 4, md: 6 }
           }} dangerouslySetInnerHTML={{ __html: t.hero.title }} />
           
           <Typography variant="h5" sx={{ 
             fontWeight: 300, 
             color: 'rgba(0,0,0,0.6)', 
             maxWidth: '600px', 
-            mb: 8 
+            mb: { xs: 6, md: 8 },
+            fontSize: { xs: '1.1rem', md: '1.5rem' }
           }}>
             {t.hero.subtitle}
           </Typography>
         </motion.div>
 
-        <Grid container spacing={6} sx={{ mt: 4, alignItems: 'flex-end' }}>
+        <Grid container spacing={{ xs: 4, md: 6 }} sx={{ mt: 4, alignItems: 'flex-end' }}>
           {featuredProjects.map((p, i) => (
-            <Grid size={{ xs: 12, md: 4 }} key={p.id}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={p.id}>
               <Box sx={{ borderTop: '2px solid black', pt: 3 }} className="group">
                 <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.2em', display: 'block', mb: 2 }}>
                   {i === 0 ? t.hero.latestProject : t.hero.communication}
                 </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 800, '&:hover': { fontStyle: 'italic' }, transition: 'all 0.3s', cursor: 'pointer' }}>
-                  {String(p.title)}
+                <Typography variant="h4" sx={{ fontWeight: 800, fontSize: { xs: '1.5rem', md: '2.125rem' }, '&:hover': { fontStyle: 'italic' }, transition: 'all 0.3s', cursor: 'pointer' }}>
+                  {p.title}
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'rgba(0,0,0,0.4)', mt: 1 }}>
                   {language === 'en' ? String(p.subtitle_en) : String(p.subtitle_es)}

@@ -25,8 +25,8 @@ export default function Home() {
       <ContactSection />
       
       <Box component="footer" sx={{ py: 6, bgcolor: 'white', borderTop: '1px solid rgba(0,0,0,0.05)', pl: { xs: 0, lg: '100px' } }}>
-        <Container maxWidth="xl" sx={{ ml: 0 }}>
-          <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.3em', opacity: 0.3, textTransform: 'uppercase' }}>
+        <Container maxWidth="xl" sx={{ ml: 0, px: { xs: 3, md: 0 } }}>
+          <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.3em', opacity: 0.3, textTransform: 'uppercase', fontSize: { xs: '8px', sm: '10px' } }}>
             © {new Date().getFullYear()} FERNANDO AGUSTÍN SORIA — ALL RIGHTS RESERVED
           </Typography>
         </Container>

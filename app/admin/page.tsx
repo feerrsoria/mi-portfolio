@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
-import { collection, onSnapshot, query, orderBy, addDoc, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, addDoc, deleteDoc, doc, updateDoc, FieldValue } from "firebase/firestore";
 import { 
   Box, 
   Typography, 
@@ -18,25 +18,34 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField
+  TextField,
+  Slider,
+  Divider,
+  Checkbox,
+  ToggleButtonGroup,
+  ToggleButton
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
-import { Mail, Trash2, Database, Edit, Upload } from "lucide-react";
+import { Mail, Trash2, Database, Edit, Upload, Plus, X, ListTodo } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { serverTimestamp } from "firebase/firestore";
 
-const AdminCard = ({ title, subtitle, date, user, status, content, onDelete, onEdit }: { title: string; subtitle?: string; date?: string; user?: string; status?: string; content: string; onDelete: () => void; onEdit?: () => void }) => (
+const AdminCard = ({ title, subtitle, date, user, status, content, onDelete, onEdit, progress }: { title: string; subtitle?: string; date?: string; user?: string; status?: string; content?: string; onDelete: () => void; onEdit?: () => void; progress?: number }) => (
   <Paper elevation={0} sx={{ 
-    p: 4, 
+    p: { xs: 3, md: 4 }, 
     bgcolor: 'rgba(255,255,255,0.03)', 
     border: '1px solid rgba(255,255,255,0.05)', 
     borderRadius: 0,
     '&:hover': { borderColor: 'rgba(255,255,255,0.2)' },
     transition: 'all 0.3s',
-    position: 'relative'
+    position: 'relative',
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column'
   }}>
-    <Stack spacing={3}>
+    <Stack spacing={3} sx={{ flex: 1 }}>
       <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-        <Box>
+        <Box sx={{ flex: 1 }}>
           <Typography variant="h5" sx={{ fontWeight: 800 }}>{title}</Typography>
           <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.1em', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', mt: 0.5, display: 'block' }}>
             {subtitle || user} {date && `• ${date}`}
@@ -49,8 +58,8 @@ const AdminCard = ({ title, subtitle, date, user, status, content, onDelete, onE
               variant="outlined"
               sx={{ 
                 borderRadius: 0, 
-                borderColor: status === 'pending' ? 'rgba(255,255,0,0.3)' : 'rgba(0,255,0,0.3)',
-                color: status === 'pending' ? '#ffff00' : '#00ff00',
+                borderColor: status === 'pending' ? 'rgba(255,255,0,0.3)' : status === 'completed' ? 'rgba(0,255,0,0.3)' : 'rgba(255,255,255,0.2)',
+                color: status === 'pending' ? '#ffff00' : status === 'completed' ? '#00ff00' : 'white',
                 fontSize: '10px',
                 fontWeight: 800
               }} 
@@ -67,12 +76,26 @@ const AdminCard = ({ title, subtitle, date, user, status, content, onDelete, onE
         </Stack>
       </Stack>
 
-      <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 300, lineHeight: 1.6, maxHeight: '4.8em', overflow: 'hidden' }}>
-        {content}
-      </Typography>
+      {progress !== undefined && (
+        <Box>
+            <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
+                <Typography variant="caption" sx={{ fontWeight: 800, opacity: 0.4 }}>PROGRESS</Typography>
+                <Typography variant="caption" sx={{ fontWeight: 800 }}>{progress}%</Typography>
+            </Stack>
+            <Box sx={{ width: '100%', height: 2, bgcolor: 'rgba(255,255,255,0.1)' }}>
+                <Box sx={{ width: `${progress}%`, height: '100%', bgcolor: '#00ccff' }} />
+            </Box>
+        </Box>
+      )}
 
-      <Stack direction="row" spacing={4} sx={{ pt: 1 }}>
-        {user && (
+      {content && (
+        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 300, lineHeight: 1.6, maxHeight: '4.8em', overflow: 'hidden' }}>
+          {content}
+        </Typography>
+      )}
+
+      <Stack direction="row" spacing={4} sx={{ pt: 1, mt: 'auto' }}>
+        {user && !progress && (
           <MuiLink 
             href={`mailto:${user}`} 
             sx={{ color: 'white', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 1, fontWeight: 800, letterSpacing: '0.1em', fontSize: '10px', '&:hover': { opacity: 0.6 } }}
@@ -85,13 +108,36 @@ const AdminCard = ({ title, subtitle, date, user, status, content, onDelete, onE
   </Paper>
 );
 
-interface ContactRequest { id: string; type?: string; name?: string; userEmail?: string; status?: string; message?: string; createdAt?: { toDate: () => Date }; [key: string]: unknown; }
-interface ProjectData { id: string; title?: string; subtitle_en?: string; description_en?: string; imageUrl?: string; live?: string; github?: string; order?: number; subtitle_es?: string; description_es?: string; [key: string]: unknown; }
+interface ContactRequest { id: string; type?: string; name?: string; userEmail?: string; status?: string; message?: string; createdAt?: { toDate: () => Date } | FieldValue; [key: string]: unknown; }
+interface ProjectData { 
+    id: string; 
+    type?: 'portfolio' | 'development';
+    // Portfolio fields
+    title?: string; 
+    subtitle_en?: string; 
+    subtitle_es?: string; 
+    description_en?: string; 
+    description_es?: string; 
+    imageUrl?: string; 
+    tech?: string[]; 
+    live?: string; 
+    github?: string; 
+    order?: number; 
+    // Development fields
+    name?: string;
+    clientId?: string;
+    progress?: number;
+    status?: string;
+    milestones?: { text: string; completed: boolean; }[];
+    createdAt?: { toDate: () => Date } | FieldValue;
+    [key: string]: unknown; 
+}
 interface ExperienceData { id: string; role_en?: string; company?: string; description_en?: string; [key: string]: unknown; }
 
 export default function AdminDashboard() {
   const [requests, setRequests] = useState<ContactRequest[]>([]);
-  const [projects, setProjects] = useState<ProjectData[]>([]);
+  const [portfolioProjects, setPortfolioProjects] = useState<ProjectData[]>([]);
+  const [devProjects, setDevProjects] = useState<ProjectData[]>([]);
   const [experience, setExperience] = useState<ExperienceData[]>([]);
   const [activeTab, setActiveTab] = useState(0);
   const [editingProject, setEditingProject] = useState<ProjectData | null>(null);
@@ -99,12 +145,23 @@ export default function AdminDashboard() {
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean, title: string, message: string, onConfirm: () => void } | null>(null);
   const [alertDialog, setAlertDialog] = useState<{ open: boolean, title: string, message: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [newMilestone, setNewMilestone] = useState("");
 
   const {} = useAuth();
 
   useEffect(() => {
     const unsubR = onSnapshot(query(collection(db, "contactRequests"), orderBy("createdAt", "desc")), (snap) => setRequests(snap.docs.map(d => ({id: d.id, ...d.data()}))));
-    const unsubP = onSnapshot(query(collection(db, "projects"), orderBy("order", "asc")), (snap) => setProjects(snap.docs.map(d => ({id: d.id, ...d.data()}))));
+    
+    const unsubP = onSnapshot(query(collection(db, "projects"), orderBy("order", "asc")), (snap) => {
+        const all = snap.docs.map(d => ({id: d.id, ...d.data()} as ProjectData));
+        setPortfolioProjects(all.filter(p => !p.clientId));
+        setDevProjects(all.filter(p => !!p.clientId).sort((a, b) => {
+            const dateA = (a.createdAt && 'toDate' in a.createdAt) ? (a.createdAt as { toDate: () => Date }).toDate() : new Date(0);
+            const dateB = (b.createdAt && 'toDate' in b.createdAt) ? (b.createdAt as { toDate: () => Date }).toDate() : new Date(0);
+            return dateB.getTime() - dateA.getTime();
+        }));
+    });
+
     const unsubE = onSnapshot(query(collection(db, "experience"), orderBy("order", "asc")), (snap) => setExperience(snap.docs.map(d => ({id: d.id, ...d.data()}))));
 
     return () => { unsubR(); unsubP(); unsubE(); };
@@ -123,16 +180,55 @@ export default function AdminDashboard() {
   };
 
   const saveProject = async () => {
-    if (editingProject && editingProject.id) {
-      const { id, ...data } = editingProject;
-      await updateDoc(doc(db, "projects", String(id)), data);
-      setEditingProject(null);
+    if (editingProject) {
+      const isPortfolio = editingProject.type === 'portfolio';
+      const mainTitle = isPortfolio ? editingProject.title : editingProject.name;
+
+      if (!mainTitle) {
+        setAlertDialog({
+          open: true,
+          title: 'Validation Error',
+          message: `${isPortfolio ? 'Portfolio Title' : 'Project Name'} is required.`
+        });
+        return;
+      }
+
+      try {
+        if (editingProject.id) {
+          const { id, ...data } = editingProject;
+          await updateDoc(doc(db, "projects", String(id)), data);
+        } else {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { id, ...data } = editingProject;
+          if (!isPortfolio) {
+              data.createdAt = serverTimestamp();
+          }
+          await addDoc(collection(db, "projects"), data);
+        }
+        setEditingProject(null);
+      } catch (error) {
+        console.error('Error saving project:', error);
+        setAlertDialog({
+          open: true,
+          title: 'Save Failed',
+          message: 'Failed to save project. ' + (error instanceof Error ? error.message : 'Unknown error')
+        });
+      }
     }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')) {
+      setAlertDialog({
+        open: true,
+        title: 'Configuration Missing',
+        message: 'Supabase URL is not configured. Please check your .env.local file.'
+      });
+      return;
+    }
 
     setUploadingImage(true);
     try {
@@ -238,24 +334,100 @@ export default function AdminDashboard() {
     });
   };
 
+  const openNewProjectDialog = (type: 'portfolio' | 'development' = 'portfolio') => {
+    setEditingProject({ 
+      id: '', 
+      type,
+      title: '', 
+      name: '',
+      subtitle_en: '', 
+      subtitle_es: '', 
+      description_en: '', 
+      description_es: '', 
+      imageUrl: '', 
+      tech: [], 
+      live: '', 
+      github: '', 
+      order: portfolioProjects.length + 1,
+      progress: 0,
+      clientId: '',
+      status: 'pending',
+      milestones: []
+    });
+  };
+
+  const addMilestone = () => {
+    if (!newMilestone.trim() || !editingProject) return;
+    const milestones = [...(editingProject.milestones || []), { text: newMilestone, completed: false }];
+    setEditingProject({ ...editingProject, milestones });
+    setNewMilestone("");
+  };
+
+  const removeMilestone = (idx: number) => {
+    if (!editingProject) return;
+    const milestones = (editingProject.milestones || []).filter((_, i) => i !== idx);
+    setEditingProject({ ...editingProject, milestones });
+  };
+
+  const toggleMilestone = (idx: number) => {
+    if (!editingProject) return;
+    const milestones = (editingProject.milestones || []).map((m, i) => i === idx ? { ...m, completed: !m.completed } : m);
+    setEditingProject({ ...editingProject, milestones });
+  };
+
   return (
     <Box>
-      <Grid container spacing={8}>
+      <Grid container spacing={{ xs: 4, md: 8 }}>
         <Grid size={{ xs: 12, lg: 9 }}>
-          <Box sx={{ borderBottom: '1px solid rgba(255,255,255,0.1)', mb: 6 }}>
+          <Box sx={{ 
+            borderBottom: '1px solid rgba(255,255,255,0.1)', 
+            mb: { xs: 4, md: 6 }, 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
+            justifyContent: 'space-between', 
+            alignItems: { xs: 'stretch', sm: 'center' },
+            gap: 2
+          }}>
             <Tabs 
               value={activeTab} 
               onChange={(_, v) => setActiveTab(v)}
+              variant="scrollable"
+              scrollButtons="auto"
               sx={{ 
                 '& .MuiTabs-indicator': { bgcolor: 'white' },
-                '& .MuiTab-root': { color: 'rgba(255,255,255,0.4)', fontWeight: 800, letterSpacing: '0.1em', fontSize: '12px' },
+                '& .MuiTab-root': { 
+                    color: 'rgba(255,255,255,0.4)', 
+                    fontWeight: 800, 
+                    letterSpacing: '0.1em', 
+                    fontSize: '11px',
+                    minWidth: 'auto',
+                    px: 2
+                },
                 '& .Mui-selected': { color: 'white !important' }
               }}
             >
               <Tab label={`REQUESTS (${requests.length})`} />
-              <Tab label={`PROJECTS (${projects.length})`} />
+              <Tab label={`PORTFOLIO (${portfolioProjects.length})`} />
+              <Tab label={`DEV PROJECTS (${devProjects.length})`} />
               <Tab label={`EXPERIENCE (${experience.length})`} />
             </Tabs>
+            {(activeTab === 1 || activeTab === 2) && (
+              <Button 
+                onClick={() => openNewProjectDialog(activeTab === 1 ? 'portfolio' : 'development')} 
+                startIcon={<Plus size={16} />} 
+                variant="outlined" 
+                sx={{ 
+                    borderRadius: 0, 
+                    borderColor: 'rgba(255,255,255,0.2)', 
+                    color: 'white', 
+                    fontWeight: 800, 
+                    mb: 1,
+                    fontSize: '11px'
+                }}
+              >
+                {activeTab === 1 ? 'ADD TO PORTFOLIO' : 'NEW DEV PROJECT'}
+              </Button>
+            )}
           </Box>
 
           <Grid container spacing={4}>
@@ -265,7 +437,7 @@ export default function AdminDashboard() {
                    title={r.type === 'budget' ? "Budget Request" : "Project Proposal"}
                    subtitle={String(r.name || '')}
                    user={String(r.userEmail || '')}
-                   date={(r.createdAt as { toDate: () => Date })?.toDate().toLocaleDateString()}
+                   date={(r.createdAt && 'toDate' in r.createdAt) ? (r.createdAt as { toDate: () => Date }).toDate().toLocaleDateString() : ''}
                    status={String(r.status || '')}
                    content={String(r.message || '')}
                    onDelete={() => handleDelete("contactRequests", r.id)}
@@ -273,19 +445,37 @@ export default function AdminDashboard() {
                </Grid>
             ))}
 
-            {activeTab === 1 && projects.map(p => (
+            {activeTab === 1 && portfolioProjects.map(p => (
                <Grid size={{ xs: 12, md: 6 }} key={p.id}>
                  <AdminCard 
                    title={String(p.title || '')}
                    subtitle={String(p.subtitle_en || '')}
                    content={String(p.description_en || '')}
                    onDelete={() => handleDelete("projects", p.id)}
-                   onEdit={() => setEditingProject(p)}
+                   onEdit={() => {
+                       setEditingProject({...p, type: 'portfolio'});
+                   }}
                  />
                </Grid>
             ))}
 
-            {activeTab === 2 && experience.map(e => (
+            {activeTab === 2 && devProjects.map(p => (
+               <Grid size={{ xs: 12, md: 6 }} key={p.id}>
+                 <AdminCard 
+                   title={String(p.name || '')}
+                   subtitle={`Client: ${p.clientId?.substring(0, 8)}...`}
+                   date={(p.createdAt && 'toDate' in p.createdAt) ? (p.createdAt as { toDate: () => Date }).toDate().toLocaleDateString() : ''}
+                   status={String(p.status || '')}
+                   progress={Number(p.progress || 0)}
+                   onDelete={() => handleDelete("projects", p.id)}
+                   onEdit={() => {
+                        setEditingProject({...p, type: 'development'});
+                   }}
+                 />
+               </Grid>
+            ))}
+
+            {activeTab === 3 && experience.map(e => (
                <Grid size={{ xs: 12, md: 6 }} key={e.id}>
                  <AdminCard 
                    title={String(e.role_en || '')}
@@ -308,12 +498,18 @@ export default function AdminDashboard() {
                         <Typography variant="h3" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>{requests.filter(r => r.status === 'pending').length}</Typography>
                     </Box>
                     <Box>
-                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', display: 'block', mb: 1, fontWeight: 800 }}>LATEST SYNC</Typography>
-                        <Typography variant="h6" sx={{ fontWeight: 800, opacity: 0.8 }}>NOW</Typography>
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', display: 'block', mb: 1, fontWeight: 800 }}>ACTIVE DEV PROJECTS</Typography>
+                        <Typography variant="h3" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>{devProjects.filter(p => p.status !== 'completed').length}</Typography>
                     </Box>
                 </Stack>
             </Paper>
 
+            <Button onClick={() => openNewProjectDialog('portfolio')} startIcon={<Database size={16} />} fullWidth variant="outlined" sx={{ borderRadius: 0, borderColor: 'rgba(255,255,255,0.1)', color: 'white', py: 2, fontWeight: 800 }}>
+                NEW PORTFOLIO ITEM
+            </Button>
+            <Button onClick={() => openNewProjectDialog('development')} startIcon={<ListTodo size={16} />} fullWidth variant="outlined" sx={{ borderRadius: 0, borderColor: 'rgba(255,255,255,0.1)', color: 'white', py: 2, fontWeight: 800 }}>
+                NEW DEV PROJECT
+            </Button>
             <Button onClick={seedData} startIcon={<Database size={16} />} fullWidth variant="outlined" sx={{ borderRadius: 0, borderColor: 'rgba(255,255,255,0.1)', color: 'white', py: 2, fontWeight: 800 }}>
                 SEED DEFAULT DATA
             </Button>
@@ -322,125 +518,204 @@ export default function AdminDashboard() {
       </Grid>
 
       <Dialog open={!!editingProject} onClose={() => setEditingProject(null)} maxWidth="md" fullWidth PaperProps={{ sx: { bgcolor: '#111', color: 'white', borderRadius: 0, border: '1px solid rgba(255,255,255,0.1)' } }}>
-        <DialogTitle sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>EDIT PROJECT</DialogTitle>
-        <DialogContent dividers sx={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+        <DialogTitle sx={{ p: 4 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Typography variant="h5" sx={{ fontWeight: 800, letterSpacing: '0.1em' }}>
+                    {editingProject?.id ? "EDIT" : "CREATE NEW"} {editingProject?.type?.toUpperCase()} PROJECT
+                </Typography>
+                <ToggleButtonGroup
+                    value={editingProject?.type}
+                    exclusive
+                    onChange={(_, val) => val && setEditingProject({...editingProject!, type: val})}
+                    sx={{ bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 0 }}
+                >
+                    <ToggleButton value="portfolio" sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.1)', px: 3, fontWeight: 800, fontSize: '10px' }}>PORTFOLIO</ToggleButton>
+                    <ToggleButton value="development" sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.1)', px: 3, fontWeight: 800, fontSize: '10px' }}>DEVELOPMENT</ToggleButton>
+                </ToggleButtonGroup>
+            </Stack>
+        </DialogTitle>
+        <DialogContent sx={{ p: 4, pt: 0 }}>
           {editingProject && (
-            <Stack spacing={4} sx={{ pt: 2 }}>
-              <TextField 
-                label="Title" 
-                fullWidth 
-                variant="outlined" 
-                value={editingProject.title || ''} 
-                onChange={e => setEditingProject({...editingProject, title: e.target.value})}
-                InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
-                sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
-              />
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 6 }}>
+            <Stack spacing={4}>
+              {editingProject.type === 'portfolio' ? (
+                <>
                   <TextField 
-                    label="Subtitle (EN)" 
+                    label="Title" 
                     fullWidth 
-                    value={editingProject.subtitle_en || ''} 
-                    onChange={e => setEditingProject({...editingProject, subtitle_en: e.target.value})}
-                    InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
-                    sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField 
-                    label="Subtitle (ES)" 
-                    fullWidth 
-                    value={editingProject.subtitle_es || ''} 
-                    onChange={e => setEditingProject({...editingProject, subtitle_es: e.target.value})}
-                    InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
-                    sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
-                  />
-                </Grid>
-              </Grid>
-              <TextField 
-                label="Description (EN)" 
-                fullWidth 
-                multiline rows={3}
-                value={editingProject.description_en || ''} 
-                onChange={e => setEditingProject({...editingProject, description_en: e.target.value})}
-                InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
-                sx={{ textarea: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
-              />
-              <TextField 
-                label="Description (ES)" 
-                fullWidth 
-                multiline rows={3}
-                value={editingProject.description_es || ''} 
-                onChange={e => setEditingProject({...editingProject, description_es: e.target.value})}
-                InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
-                sx={{ textarea: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
-              />
-              <Box>
-                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', mb: 1, display: 'block' }}>Project Image</Typography>
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    hidden
-                    ref={fileInputRef}
-                    onChange={handleImageUpload}
-                  />
-                  <Button 
                     variant="outlined" 
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingImage}
-                    startIcon={uploadingImage ? null : <Upload size={16} />}
-                    sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.2)', borderRadius: 0 }}
-                  >
-                    {uploadingImage ? 'UPLOADING...' : 'UPLOAD IMAGE'}
-                  </Button>
-                  {editingProject.imageUrl && (
-                    <Box component="img" src={editingProject.imageUrl} sx={{ height: 40, width: 40, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.2)' }} />
-                  )}
-                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {editingProject.imageUrl || 'No image selected'}
-                  </Typography>
-                </Stack>
-              </Box>
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <TextField 
-                    label="Live URL" 
-                    fullWidth 
-                    value={editingProject.live || ''} 
-                    onChange={e => setEditingProject({...editingProject, live: e.target.value})}
+                    value={editingProject.title || ''} 
+                    onChange={e => setEditingProject({...editingProject, title: e.target.value})}
                     InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
                     sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
                   />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField 
+                        label="Subtitle (EN)" 
+                        fullWidth 
+                        value={editingProject.subtitle_en || ''} 
+                        onChange={e => setEditingProject({...editingProject, subtitle_en: e.target.value})}
+                        InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
+                        sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField 
+                        label="Subtitle (ES)" 
+                        fullWidth 
+                        value={editingProject.subtitle_es || ''} 
+                        onChange={e => setEditingProject({...editingProject, subtitle_es: e.target.value})}
+                        InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
+                        sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
+                      />
+                    </Grid>
+                  </Grid>
                   <TextField 
-                    label="GitHub URL" 
+                    label="Description (EN)" 
                     fullWidth 
-                    value={editingProject.github || ''} 
-                    onChange={e => setEditingProject({...editingProject, github: e.target.value})}
+                    multiline rows={3}
+                    value={editingProject.description_en || ''} 
+                    onChange={e => setEditingProject({...editingProject, description_en: e.target.value})}
+                    InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
+                    sx={{ textarea: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
+                  />
+                  <TextField 
+                    label="Description (ES)" 
+                    fullWidth 
+                    multiline rows={3}
+                    value={editingProject.description_es || ''} 
+                    onChange={e => setEditingProject({...editingProject, description_es: e.target.value})}
+                    InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
+                    sx={{ textarea: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
+                  />
+                  <Box>
+                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', mb: 1, display: 'block', fontWeight: 800 }}>PROJECT IMAGE</Typography>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                      <input type="file" accept="image/*" hidden ref={fileInputRef} onChange={handleImageUpload} />
+                      <Button variant="outlined" onClick={() => fileInputRef.current?.click()} disabled={uploadingImage} startIcon={uploadingImage ? null : <Upload size={16} />} sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.2)', borderRadius: 0 }}>
+                        {uploadingImage ? 'UPLOADING...' : 'UPLOAD IMAGE'}
+                      </Button>
+                      {editingProject.imageUrl && (
+                        <Box component="img" src={editingProject.imageUrl} sx={{ height: 40, width: 40, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.2)' }} />
+                      )}
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {editingProject.imageUrl || 'No image selected'}
+                      </Typography>
+                    </Stack>
+                  </Box>
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField label="Live URL" fullWidth value={editingProject.live || ''} onChange={e => setEditingProject({...editingProject, live: e.target.value})} InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }} sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField label="GitHub URL" fullWidth value={editingProject.github || ''} onChange={e => setEditingProject({...editingProject, github: e.target.value})} InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }} sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 4 }}>
+                      <TextField label="Order" type="number" fullWidth value={editingProject.order || 0} onChange={e => setEditingProject({...editingProject, order: Number(e.target.value)})} InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }} sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 8 }}>
+                      <TextField label="Tech (comma-separated)" fullWidth value={(editingProject.tech || []).join(', ')} onChange={e => setEditingProject({...editingProject, tech: e.target.value.split(',').map(s => s.trim())})} InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }} sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }} />
+                    </Grid>
+                  </Grid>
+                </>
+              ) : (
+                <>
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, sm: 8 }}>
+                        <TextField 
+                            label="Project Name" 
+                            fullWidth 
+                            value={editingProject.name || ''} 
+                            onChange={e => setEditingProject({...editingProject, name: e.target.value})}
+                            InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
+                            sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 4 }}>
+                         <TextField 
+                            label="Status" 
+                            fullWidth 
+                            select
+                            SelectProps={{ native: true }}
+                            value={editingProject.status || 'pending'} 
+                            onChange={e => setEditingProject({...editingProject, status: e.target.value})}
+                            InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
+                            sx={{ select: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
+                        >
+                            <option value="pending" style={{ background: '#111' }}>Pending</option>
+                            <option value="in_progress" style={{ background: '#111' }}>In Progress</option>
+                            <option value="review" style={{ background: '#111' }}>Review</option>
+                            <option value="completed" style={{ background: '#111' }}>Completed</option>
+                        </TextField>
+                    </Grid>
+                  </Grid>
+
+                  <TextField 
+                    label="Client UID" 
+                    fullWidth 
+                    value={editingProject.clientId || ''} 
+                    onChange={e => setEditingProject({...editingProject, clientId: e.target.value})}
                     InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
                     sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
+                    helperText="Firebase User ID to show this project to the client"
+                    FormHelperTextProps={{ sx: { color: 'rgba(255,255,255,0.4)' } }}
                   />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <TextField 
-                    label="Order" 
-                    type="number"
-                    fullWidth 
-                    value={editingProject.order || 0} 
-                    onChange={e => setEditingProject({...editingProject, order: Number(e.target.value)})}
-                    InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.6)' } }}
-                    sx={{ input: { color: 'white' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' } }}
-                  />
-                </Grid>
-              </Grid>
+
+                  <Box>
+                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', mb: 2, display: 'block', fontWeight: 800 }}>PROGRESS ({editingProject.progress || 0}%)</Typography>
+                    <Slider
+                        value={editingProject.progress || 0}
+                        onChange={(_, val) => setEditingProject({...editingProject, progress: val as number})}
+                        sx={{ color: 'white' }}
+                    />
+                  </Box>
+
+                  <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+
+                  <Box>
+                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', mb: 3, display: 'block', fontWeight: 800 }}>MILESTONES</Typography>
+                    <Stack spacing={2}>
+                        {editingProject.milestones?.map((m, idx) => (
+                            <Stack key={idx} direction="row" spacing={2} alignItems="center">
+                                <Checkbox 
+                                    checked={m.completed} 
+                                    onChange={() => toggleMilestone(idx)}
+                                    sx={{ color: 'rgba(255,255,255,0.2)', '&.Mui-checked': { color: '#00ff00' } }}
+                                />
+                                <Typography sx={{ flex: 1, color: m.completed ? 'rgba(255,255,255,0.3)' : 'white', textDecoration: m.completed ? 'line-through' : 'none' }}>
+                                    {m.text}
+                                </Typography>
+                                <IconButton onClick={() => removeMilestone(idx)} size="small" sx={{ color: 'rgba(255,255,255,0.2)', '&:hover': { color: 'red' } }}>
+                                    <X size={14} />
+                                </IconButton>
+                            </Stack>
+                        ))}
+                        <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                            <TextField 
+                                placeholder="Add new milestone..." 
+                                fullWidth 
+                                size="small"
+                                value={newMilestone}
+                                onChange={e => setNewMilestone(e.target.value)}
+                                onKeyPress={e => e.key === 'Enter' && addMilestone()}
+                                sx={{ bgcolor: 'rgba(255,255,255,0.03)', input: { color: 'white' } }}
+                            />
+                            <Button onClick={addMilestone} variant="outlined" sx={{ borderColor: 'rgba(255,255,255,0.2)', color: 'white' }}>
+                                <Plus size={18} />
+                            </Button>
+                        </Stack>
+                    </Stack>
+                  </Box>
+                </>
+              )}
             </Stack>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setEditingProject(null)} sx={{ color: 'rgba(255,255,255,0.6)' }}>CANCEL</Button>
-          <Button onClick={saveProject} variant="contained" sx={{ bgcolor: 'white', color: 'black', '&:hover': { bgcolor: 'rgba(255,255,255,0.8)' }, fontWeight: 800 }}>SAVE CHANGES</Button>
+        <DialogActions sx={{ p: 4, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+          <Button onClick={() => setEditingProject(null)} sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 800 }}>CANCEL</Button>
+          <Button onClick={saveProject} variant="contained" sx={{ bgcolor: 'white', color: 'black', '&:hover': { bgcolor: 'rgba(255,255,255,0.8)' }, px: 4, fontWeight: 800 }}>
+              {editingProject?.id ? 'UPDATE PROJECT' : 'CREATE PROJECT'}
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -465,5 +740,6 @@ export default function AdminDashboard() {
         </DialogActions>
       </Dialog>
     </Box>
+
   );
 }

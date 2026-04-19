@@ -35,8 +35,8 @@ export default function ExperienceSection() {
   if (loading) return null;
 
   return (
-    <Box component="section" id="experience" sx={{ py: 12, bgcolor: 'white', pl: { xs: 0, lg: '100px' } }}>
-      <Container maxWidth="xl" disableGutters sx={{ ml: 0 }}>
+    <Box component="section" id="experience" sx={{ py: { xs: 8, md: 12 }, bgcolor: 'white', pl: { xs: 0, lg: '100px' } }}>
+      <Container maxWidth="xl" sx={{ ml: 0, px: { xs: 3, md: 0 } }}>
         <motion.div
            initial={{ opacity: 0 }}
            whileInView={{ opacity: 1 }}
@@ -46,7 +46,7 @@ export default function ExperienceSection() {
           <Typography variant="caption" sx={{ fontWeight: 800, letterSpacing: '0.2em', color: 'rgba(0,0,0,0.4)', textTransform: 'uppercase' }}>
             {t.experience.subtitle}
           </Typography>
-          <Typography variant="h2" sx={{ mt: 2, fontSize: { xs: '3rem', md: 'clamp(3rem, 6vw, 6rem)' } }}>
+          <Typography variant="h2" sx={{ mt: 2, fontSize: { xs: '2.5rem', sm: '3rem', md: 'clamp(3rem, 6vw, 6rem)' } }}>
             {t.experience.title}
           </Typography>
         </motion.div>
@@ -61,12 +61,12 @@ export default function ExperienceSection() {
               transition={{ delay: i * 0.1 }}
             >
               <Box sx={{ borderBottom: '1px solid rgba(0,0,0,0.05)', pb: 6 }}>
-                <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={4}>
+                <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={{ xs: 2, md: 4 }}>
                   <Box sx={{ flex: 1 }}>
-                    <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>
+                    <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em', fontSize: { xs: '1.5rem', md: '2.125rem' } }}>
                         {language === 'en' ? String(exp.role_en) : String(exp.role_es)}
                     </Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: 'rgba(0,0,0,0.6)', mt: 1 }}>{String(exp.company)}</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: 'rgba(0,0,0,0.6)', mt: 1, fontSize: { xs: '1rem', md: '1.25rem' } }}>{String(exp.company)}</Typography>
                   </Box>
                   <Box sx={{ flex: 1, maxWidth: '600px' }}>
                     <Typography variant="body1" sx={{ fontWeight: 300, color: 'rgba(0,0,0,0.7)', lineHeight: 1.8, mb: 2 }}>
